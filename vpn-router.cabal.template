@@ -1,0 +1,107 @@
+cabal-version: 3.0
+name:          vpn-router
+version:       0.0.1
+
+synopsis:      Switch VPN with web interface for LAN
+description:
+homepage:      http://github.com/yaitskov/vpn-router
+license:       BSD-3-Clause
+license-file:  LICENSE
+author:        Daniil Iaitskov
+maintainer:    dyaitskov@gmail.com
+copyright:     Daniil Iaitkov 2026
+category:      System
+build-type:    Simple
+bug-reports:   https://github.com/yaitskov/vpn-router/issues
+extra-doc-files:
+  changelog.md
+tested-with:
+  GHC == 9.12.2
+
+source-repository head
+  type:
+    git
+  location:
+    https://github.com/yaitskov/vpn-router.git
+
+common base
+  default-language: GHC2024
+  ghc-options: -Wall
+  default-extensions:
+    DefaultSignatures
+    NoImplicitPrelude
+    OverloadedStrings
+    TemplateHaskell
+  build-depends:
+      base >=4.7 && < 5
+    , bytestring >= 0.12.1 && < 1
+    , directory < 2
+    , optparse-applicative < 1
+    , relude >= 1.2.2 && < 2
+    , tagged < 1
+    , unliftio < 1
+    , yesod < 1.8
+
+library
+  import: base
+  hs-source-dirs: src
+  exposed-modules:
+    VpnRouter.CmdArgs
+    VpnRouter.CmdRun
+    VpnRouter.Net
+    VpnRouter.Page
+    VpnRouter.Prelude
+  other-modules:
+    Paths_vpn_router
+  autogen-modules:
+    Paths_vpn_router
+  build-depends:
+    , base                    < 5
+    , binary                  < 1
+    , conduit                 < 2
+    , conduit-extra           < 2
+    , containers              < 1
+    , deepseq                 < 2
+    , extra                   < 2
+    , filepath                < 2
+    , lens                    < 6
+    , memory                  < 1
+    , pretty-hex              < 2
+    , regex-tdfa              < 2
+    , template-haskell        < 3
+    , time                    < 2
+    , wl-pprint-text          < 2
+    , word8                   < 1
+    , exceptions
+    , yesod
+    , wai
+    , network
+    , blaze-markup
+    , trace-embrace
+    , typelits-printf
+
+test-suite test
+  import: base
+  type: exitcode-stdio-1.0
+  main-is: Driver.hs
+  other-modules:
+    VpnRouter.Test.Net
+    Discovery
+  hs-source-dirs:
+    test
+  ghc-options: -Wall -rtsopts -threaded -main-is Driver
+  build-depends:
+    , vpn-router
+    , QuickCheck
+    , tasty
+    , tasty-discover
+    , tasty-hunit
+    , tasty-quickcheck
+
+executable vpn-router
+  import: base
+  ghc-options: -Wall -threaded -with-rtsopts=-N
+  main-is: VpnRouter.hs
+  hs-source-dirs: app
+  build-depends:
+    , vpn-router

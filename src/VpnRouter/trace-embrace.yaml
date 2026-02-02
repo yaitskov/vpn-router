@@ -1,0 +1,20 @@
+levels:
+- '-'
+mode:
+  tag: TraceStd
+runtimeLevelsOverrideEnvVar:
+  tag: CapsPackageName
+traceMessage:
+  entrySeparator: '; '
+  keyValueSeparator: ': '
+  retValPrefix: ' => '
+  traceLinePattern:
+  - tag: FullyQualifiedModule
+  - contents: '::'
+    tag: Delimiter
+  - tag: FunctionName
+  - contents: ': '
+    tag: Delimiter
+  - tag: LiteralMessage
+  - tag: Variables
+version: 1

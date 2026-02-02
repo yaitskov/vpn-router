@@ -1,0 +1,20 @@
+{
+  "nixpkgs": {
+    "branch": "master",
+    "repo": "/home/dan/pro/nixpkgs",
+    "rev": "da5af46a09eeb2b1c8f4193d626727d5b7460601",
+    "type": "git"
+  },
+  "upload-doc-to-hackage": {
+    "branch": "master",
+    "description": "Automated workaround for uploading Cabal docs to hackage",
+    "homepage": null,
+    "owner": "yaitskov",
+    "repo": "upload-doc-to-hackage",
+    "rev": "d342d5659821bcce0233aee38239c3965677221a",
+    "sha256": "1b9z5nfz654j6ayaacnd5r0zmfxp2b91x30rkc2cp8rkfg908gd2",
+    "type": "tarball",
+    "url": "https://github.com/yaitskov/upload-doc-to-hackage/archive/d342d5659821bcce0233aee38239c3965677221a.tar.gz",
+    "url_template": "https://github.com/<owner>/<repo>/archive/<rev>.tar.gz"
+  }
+}

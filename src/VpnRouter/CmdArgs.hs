@@ -1,0 +1,109 @@
+module VpnRouter.CmdArgs where
+
+import Options.Applicative
+import System.IO.Unsafe ( unsafePerformIO )
+import VpnRouter.Net
+    ( HostIp,
+      Gateway,
+      IspNic,
+      RoutingTableId(..),
+      PacketMark(..),
+      listDefaultsOfRoutingTable,
+      parseIpV4,
+      mainRoutingTableName )
+import VpnRouter.Prelude
+
+
+data HttpPort
+
+data CmdArgs
+  = RunService
+    { ispNic :: Tagged IspNic Text
+    , gatewayHost :: Tagged Gateway HostIp
+    , routingTableId :: RoutingTableId
+    , packetMark :: PacketMark
+    , httpPortToListen :: Tagged HttpPort Int
+    }
+  | VpnRouterVersion
+    deriving (Eq, Show)
+
+execWithArgs :: MonadIO m => (CmdArgs -> m a) -> m a
+execWithArgs a = a =<< liftIO (execParser $ info (cmdp <**> helper) phelp)
+  where
+    routingTableOp = RoutingTableId <$>
+      option auto
+      (  long "routing-table"
+      <> short 't'
+      <> value 7
+      <> showDefault
+      <> help "routing table id"
+      )
+    packetMarkOp = PacketMark <$>
+      option auto
+      (  long "packet-mark"
+      <> short 'm'
+      <> value 2
+      <> showDefault
+      <> help "packet mark"
+      )
+    serviceP =
+      RunService
+      <$> ispNicOp
+      <*> gatewayHostOp
+      <*> routingTableOp
+      <*> packetMarkOp
+      <*> portOption
+    cmdp =
+      hsubparser
+        (  command "run" (infoP serviceP $ "launch the service exposed over HTTP")
+        <> command "version" (infoP (pure VpnRouterVersion) "print program version"))
+
+    infoP p h = info p (progDesc h <> fullDesc)
+    phelp =
+      progDesc
+        "HTML interface for VPN bypass"
+
+-- ispNicOp
+ispNicOp :: Parser (Tagged IspNic Text)
+ispNicOp =
+  strOption (long "dev" <> short 'd' <>
+             value (snd defaultGwNic) <>
+             showDefault <>
+             help "network device name connected to the Internet")
+
+-- default via 192.168.1.1 dev wlp2s0 proto dhcp src 192.168.1.103 metric 600
+defaultGwNic :: (Tagged Gateway HostIp, Tagged IspNic Text)
+defaultGwNic = unsafePerformIO go
+  where
+    defDef = ("192.168.1.1", "wlp2s0")
+    go = do
+      listDefaultsOfRoutingTable mainRoutingTableName >>= \case
+        [(gw, nic)] ->
+          pure (gw, nic)
+        [] -> do
+          putStrLn $ "No default route in the main routing table"
+          pure defDef
+        o -> do
+          putStrLn $ "Multiple default routes in the main routing table: " <> show o
+          pure defDef
+
+portOption :: Parser (Tagged HttpPort Int)
+portOption = Tagged <$>
+  option auto
+  ( long "port"
+    <> short 'p'
+    <> showDefault
+    <> value 3000
+    <> help "HTTP port to listen"
+    <> metavar "PORT"
+  )
+
+gatewayHostOp :: Parser (Tagged Gateway HostIp)
+gatewayHostOp =
+  option (Tagged <$> maybeReader parseIpV4)
+    (  long "gateway"
+    <> short 'g'
+    <> value (fst defaultGwNic)
+    <> showDefault
+    <> help "network device name connected to the Internet"
+    )
