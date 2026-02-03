@@ -22,26 +22,14 @@ $ nix-build
 $ sudo ./result/bin/vpn-router run
 ```
 
-> VpnRouter.CmdRun::runCmd: start; rs: RunService {ispNic = Tagged "wlp2s0", gatewayHost = Tagged 192.168.1.1, routingTableId = RoutingTableId 7, packetMark = PacketMark 2, httpPortToListen = Tagged 3000}
-> VpnRouter.Net::clearMarkingLines: ; pm: PacketMark 2 => [(1,PacketMark 2,"192.168.11.65"),(2,PacketMark 2,"192.168.11.65"),(3,PacketMark 2,"192.168.11.14")]
-> VpnRouter.Net::bash: ; cmd: "iptables"; args: ["-t","mangle","-D","PREROUTING","3"]
-> VpnRouter.Net::bash: ; cmd: "iptables"; args: ["-t","mangle","-D","PREROUTING","2"]
-> VpnRouter.Net::bash: ; cmd: "iptables"; args: ["-t","mangle","-D","PREROUTING","1"]
-> VpnRouter.Net::clearDefaultRoute: ; rt: RoutingTableId 7 => [(Tagged 192.168.1.1,Tagged "wlp2s0")]
-> VpnRouter.Net::bash: ; cmd: "ip"; args: ["rule","add","fwmark","2","table","7"]
-> VpnRouter.Net::bash: ; cmd: "ip"; args: ["route","add","default","via","192.168.1.1","dev","wlp2s0","table","7"]
-> 02/Feb/2026:18:05:53 +0300 [Info#yesod-core] Application launched @(yesod-core-1.6.27.0-AARvdAkh4ksHgP71iuENec:Yesod.Core.Dispatch src/Yesod/Core/Dispatch.hs:197:10)
-> 02/Feb/2026:18:06:14 +0300 [Info] Client 192.168.11.65 visited home page @(vpn-router-0.0.1-inplace:VpnRouter.Page src/VpnRouter/Page.hs:35:4)
-> VpnRouter.Net::isVpnOff: ; pmca: (PacketMark 2,"192.168.11.65") => []
-> 192.168.11.65 - - [02/Feb/2026:18:06:14 +0300] "GET / HTTP/1.1" 200 - "http://my-router:3000/" "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36"
-> 02/Feb/2026:18:06:17 +0300 [Info] Client 192.168.11.65 asked to disable VPN @(vpn-router-0.0.1-inplace:VpnRouter.Page src/VpnRouter/Page.hs:102:4)
-> VpnRouter.Net::bash: ; cmd: "iptables"; args: ["-t","mangle","-I","PREROUTING","-s","192.168.11.65","-j","MARK","--set-mark","2"]
-> 192.168.11.65 - - [02/Feb/2026:18:06:17 +0300] "POST /off HTTP/1.1" 303 0 "http://my-router:3000/" "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Mobile Safari/537.36"
 
 Once the service is running open link http://my-router:3000/.
 There is a simple UI available with a toggle button to control the VPN bypass.
 
-| ![on](/img/on.png)  | ![off](/img/off.png)  |
+
+| on                                   | off                                   | 
+|--------------------------------------|---------------------------------------|
+|  <img src="/img/on.png" width="200"> | <img src="/img/off.png" width="200">  |
 
 The service can be stopped, because it only adjusts routing options in
 the Linux kernel, but at every start  all settings related to the
@@ -55,20 +43,22 @@ iptables or use
 [capabilities](https://unix.stackexchange.com/a/768693).  All service
 options are set through command line arguments:
 
-> Usage: vpn-router run [-d|--dev ARG] [-g|--gateway ARG] [-t|--routing-table ARG]
->                       [-m|--packet-mark ARG] [-p|--port PORT]
->
->   launch the service exposed over HTTP
->
-> Available options:
->   -d,--dev ARG             network device name connected to the Internet
->                            (default: Tagged "wlp2s0")
->   -g,--gateway ARG         network device name connected to the Internet
->                            (default: Tagged 192.168.1.1)
->   -t,--routing-table ARG   routing table id (default: 7)
->   -m,--packet-mark ARG     packet mark (default: 2)
->   -p,--port PORT           HTTP port to listen (default: 3000)
->   -h,--help                Show this help text
+```
+Usage: vpn-router run [-d|--dev ARG] [-g|--gateway ARG] [-t|--routing-table ARG]
+                      [-m|--packet-mark ARG] [-p|--port PORT]
+
+   launch the service exposed over HTTP
+
+Available options:
+  -d,--dev ARG             network device name connected to the Internet
+                           (default: Tagged "wlp2s0")
+  -g,--gateway ARG         network device name connected to the Internet
+                           (default: Tagged 192.168.1.1)
+  -t,--routing-table ARG   routing table id (default: 7)
+  -m,--packet-mark ARG     packet mark (default: 2)
+  -p,--port PORT           HTTP port to listen (default: 3000)
+  -h,--help                Show this help text
+```
 
 Default values for gateway and device are dynamically detected.
 
@@ -89,4 +79,6 @@ Static is not enabled by default, because GitHub CI job times out.
 
 ```shell
 nix-build --arg staticBuild true
+# faster build on beafy machine
+nix-build --cores 20 -j 20 --arg staticBuild true  
 ```
