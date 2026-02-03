@@ -12,8 +12,10 @@ let
     };
   };
   pkgs = if staticBuild then originPkgs.pkgsMusl else originPkgs;
-  inherit (pkgs) lib;
+  inherit (pkgs) lib ;
   inherit (lib) strings;
+  inherit (pkgs.haskell.lib) dontHaddock;
+
   inherit (strings) concatStringsSep;
   staticExtraLibs = [
     "--ghc-option=-optl=-static"
@@ -61,7 +63,9 @@ let
   ];
 
   base = hsPkgs.callCabal2nix "vpn-router" (lib.sourceByRegex ./. sources) { };
-  vpn-router-overlay = _hf: _hp: { vpn-router = assertStatic (makeStatic (bindNetTool base)); };
+  vpn-router-overlay = _hf: _hp: {
+    vpn-router = assertStatic (makeStatic (dontHaddock (bindNetTool base)));
+  };
   baseHaskellPkgs = pkgs.haskell.packages.${ghcName};
   hsOverlays = [ hsPkgSetOverlay vpn-router-overlay ];
   hsPkgs = baseHaskellPkgs.override (old: {
