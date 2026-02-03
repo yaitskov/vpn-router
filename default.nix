@@ -59,7 +59,7 @@ let
 
   sources = [
     "^(app|src|test).*$"
-    "^(changelog[.]md|LICENSE.*)$"
+    "^(changelog[.]md|trace-embrace.yaml|LICENSE)$"
     "^.*\\.cabal$"
   ];
 
