@@ -38,7 +38,7 @@ common base
     , relude >= 1.2.2 && < 2
     , tagged < 1
     , unliftio < 1
-    , yesod < 1.8
+    , yesod-core < 1.8
 
 library
   import: base

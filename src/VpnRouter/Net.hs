@@ -21,7 +21,7 @@ import VpnRouter.Net.IpTool
       listDefaultsOfRoutingTable,
       addMarkToRoutingTable )
 import VpnRouter.Prelude
-import Yesod ( HandlerFor, waiRequest )
+import Yesod.Core ( HandlerFor, waiRequest )
 import UnliftIO.Exception ( stringException, throwIO )
 
 isVpnOff :: NetM m => (PacketMark, ClientAdr) -> m Bool

@@ -7,7 +7,7 @@ import VpnRouter.Page ( Ypp(Ypp) )
 import VpnRouter.CmdArgs ( CmdArgs(..) )
 import VpnRouter.Net ( manualInit, cleanup )
 import VpnRouter.Prelude
-import Yesod ( warp )
+import Yesod.Core ( warp )
 
 runCmd :: CmdArgs -> IO ()
 runCmd = \case

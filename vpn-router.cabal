@@ -6,25 +6,25 @@ synopsis:      Switch VPN with web interface for LAN
 description:
     vpn-router is a service with the web interface allowing users of a local
     network to control VPN bypass from their devices.
-    
+
     == Motivation
     #motivation#
-    
+
     It is convinient if the whole WiFi network is connected through VPN, but
     user might not access some resources sometimes. Having two networks
     deployed might be an option, though destop stations usually connect
     through the Ethernet cable, and such approch doubles the number of WiFi
     routers. Hopping between WiFi networks might not be as ergonomic as it
     should be due to bugs in the connectivity check in Android and Windows.
-    
+
     == Building
     #building#
-    
+
     The easiest way to build the project is to use nix.
-    
+
     > $ nix-build
     > $ sudo ./result/bin/vpn-router run
-    
+
     VpnRouter.CmdRun::runCmd: start; rs: RunService {ispNic = Tagged
     “wlp2s0”, gatewayHost = Tagged 192.168.1.1, routingTableId =
     RoutingTableId 7, packetMark = PacketMark 2, httpPortToListen = Tagged
@@ -59,52 +59,52 @@ description:
     303 0 “http:\/\/my-router:3000\/” “Mozilla\/5.0 (Linux; Android 10; K)
     AppleWebKit\/537.36 (KHTML, like Gecko) Chrome\/144.0.0.0 Mobile
     Safari\/537.36”
-    
+
     Once the service is running open link http:\/\/my-router:3000\/. There
     is a simple UI available with a toggle button to control the VPN bypass.
-    
+
     <</img/on.png on>> | <</img/off.png off>> |
-    
+
     The service can be stopped, because it only adjusts routing options in
     the Linux kernel, but at every start all settings related to the routing
     table and the packet mark specified in configuration will be cleared.
-    
+
     == Configuration
     #configuration#
-    
+
     The service should be launched under the root user to have access to
     iptables or use <https://unix.stackexchange.com/a/768693 capabilities>.
     All service options are set through command line arguments:
-    
+
     Usage: vpn-router run [-d|–dev ARG] [-g|–gateway ARG] [-t|–routing-table
     ARG] [-m|–packet-mark ARG] [-p|–port PORT]
-    
+
     launch the service exposed over HTTP
-    
+
     Available options: -d,–dev ARG network device name connected to the
     Internet (default: Tagged “wlp2s0”) -g,–gateway ARG network device name
     connected to the Internet (default: Tagged 192.168.1.1)
     -t,–routing-table ARG routing table id (default: 7) -m,–packet-mark ARG
     packet mark (default: 2) -p,–port PORT HTTP port to listen (default:
     3000) -h,–help Show this help text
-    
+
     Default values for gateway and device are dynamically detected.
-    
+
     == Development environment
     #development-environment#
-    
+
     HLS should be available inside dev env.
-    
+
     > $ nix-shell
     > $ emacs src/VpnRouter/Net.hs &
     > $ cabal build
     > $ cabal test
-    
+
     == Static linking
     #static-linking#
-    
+
     Static is not enabled by default, because GitHub CI job times out.
-    
+
     > nix-build --arg staticBuild true
 homepage:      http://github.com/yaitskov/vpn-router
 license:       BSD-3-Clause
@@ -140,7 +140,7 @@ common base
     , relude >= 1.2.2 && < 2
     , tagged < 1
     , unliftio < 1
-    , yesod < 1.8
+    , yesod-core < 1.8
 
 library
   import: base

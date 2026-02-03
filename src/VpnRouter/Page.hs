@@ -12,7 +12,7 @@ import VpnRouter.Net
       turnOnVpnFor )
 import VpnRouter.Prelude
     ( ($), Monad((>>=)), Bool(False, True), printf )
-import Yesod
+import Yesod.Core
     ( logInfo,
       lucius,
       getYesod,
