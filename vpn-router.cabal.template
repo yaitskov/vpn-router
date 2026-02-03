@@ -46,9 +46,14 @@ library
   import: base
   hs-source-dirs: src
   exposed-modules:
+    VpnRouter.App
+    VpnRouter.Bash
     VpnRouter.CmdArgs
     VpnRouter.CmdRun
     VpnRouter.Net
+    VpnRouter.Net.Iptables
+    VpnRouter.Net.IpTool
+    VpnRouter.Net.Types
     VpnRouter.Page
     VpnRouter.Prelude
   other-modules:

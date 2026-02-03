@@ -63,6 +63,12 @@ description:
     Once the service is running open link http:\/\/my-router:3000\/. There
     is a simple UI available with a toggle button to control the VPN bypass.
     
+    <</img/on.png on>> | <</img/off.png off>> |
+    
+    The service can be stopped, because it only adjusts routing options in
+    the Linux kernel, but at every start all settings related to the routing
+    table and the packet mark specified in configuration will be cleared.
+    
     == Configuration
     #configuration#
     
@@ -142,9 +148,14 @@ library
   import: base
   hs-source-dirs: src
   exposed-modules:
+    VpnRouter.App
+    VpnRouter.Bash
     VpnRouter.CmdArgs
     VpnRouter.CmdRun
     VpnRouter.Net
+    VpnRouter.Net.Iptables
+    VpnRouter.Net.IpTool
+    VpnRouter.Net.Types
     VpnRouter.Page
     VpnRouter.Prelude
   other-modules:

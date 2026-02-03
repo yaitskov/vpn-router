@@ -1,17 +1,30 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes, TemplateHaskell, TypeFamilies #-}
+{-# LANGUAGE QuasiQuotes, TypeFamilies #-}
 module VpnRouter.Page where
 
+import VpnRouter.Net.Types ( RoutingTableId, PacketMark )
 import VpnRouter.Net
-    ( RoutingTableId,
-      PacketMark,
-      getClientAdr,
+    ( getClientAdr,
       isVpnOff,
       turnOffVpnFor,
       turnOnVpnFor )
 import VpnRouter.Prelude
+    ( ($), Monad((>>=)), Bool(False, True), printf )
 import Yesod
+    ( logInfo,
+      lucius,
+      getYesod,
+      redirect,
+      mkYesod,
+      setTitle,
+      whamlet,
+      parseRoutes,
+      Html,
+      Yesod(defaultLayout),
+      HandlerFor,
+      ToWidget(toWidget),
+      RenderRoute(renderRoute) )
 
 data Ypp
   = Ypp

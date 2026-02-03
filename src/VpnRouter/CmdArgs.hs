@@ -2,16 +2,30 @@ module VpnRouter.CmdArgs where
 
 import Options.Applicative
 import System.IO.Unsafe ( unsafePerformIO )
-import VpnRouter.Net
-    ( HostIp,
+import VpnRouter.Net.IpTool
+    ( mainRoutingTableName, listDefaultsOfRoutingTable )
+import VpnRouter.Net.Types
+    ( RoutingTableId(RoutingTableId),
+      PacketMark(..),
+      HostIp,
       Gateway,
       IspNic,
-      RoutingTableId(..),
-      PacketMark(..),
-      listDefaultsOfRoutingTable,
-      parseIpV4,
-      mainRoutingTableName )
+      parseIpV4 )
 import VpnRouter.Prelude
+    ( ($),
+      Eq,
+      Monad((>>=)),
+      Show,
+      Semigroup((<>)),
+      Int,
+      Tagged(Tagged),
+      (=<<),
+      fst,
+      snd,
+      putStrLn,
+      show,
+      MonadIO(..),
+      Text )
 
 
 data HttpPort
