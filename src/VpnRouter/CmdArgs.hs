@@ -14,6 +14,7 @@ import VpnRouter.Net.Types
 import VpnRouter.Prelude
     ( ($),
       Eq,
+      untag,
       Monad((>>=)),
       Show,
       Semigroup((<>)),
@@ -62,8 +63,8 @@ execWithArgs a = a =<< liftIO (execParser $ info (cmdp <**> helper) phelp)
       )
     serviceP =
       RunService
-      <$> ispNicOp
-      <*> gatewayHostOp
+      <$> (Tagged @IspNic <$> ispNicOp)
+      <*> (Tagged @Gateway <$> gatewayHostOp)
       <*> routingTableOp
       <*> packetMarkOp
       <*> portOption
@@ -77,11 +78,10 @@ execWithArgs a = a =<< liftIO (execParser $ info (cmdp <**> helper) phelp)
       progDesc
         "HTML interface for VPN bypass"
 
--- ispNicOp
-ispNicOp :: Parser (Tagged IspNic Text)
+ispNicOp :: Parser Text
 ispNicOp =
   strOption (long "dev" <> short 'd' <>
-             value (snd defaultGwNic) <>
+             value (untag $ snd defaultGwNic) <>
              showDefault <>
              help "network device name connected to the Internet")
 
@@ -112,12 +112,12 @@ portOption = Tagged <$>
     <> metavar "PORT"
   )
 
-gatewayHostOp :: Parser (Tagged Gateway HostIp)
+gatewayHostOp :: Parser HostIp
 gatewayHostOp =
-  option (Tagged <$> maybeReader parseIpV4)
+  option (maybeReader parseIpV4)
     (  long "gateway"
     <> short 'g'
-    <> value (fst defaultGwNic)
+    <> value (untag $ fst defaultGwNic)
     <> showDefault
     <> help "network device name connected to the Internet"
     )
