@@ -34,8 +34,6 @@ common base
     TemplateHaskell
   build-depends:
       base >=4.7 && < 5
-    , bytestring >= 0.12.1 && < 1
-    , directory < 2
     , optparse-applicative < 1
     , relude >= 1.2.2 && < 2
     , tagged < 1
@@ -61,29 +59,15 @@ library
   autogen-modules:
     Paths_vpn_router
   build-depends:
-    , base                    < 5
-    , binary                  < 1
     , conduit                 < 2
     , conduit-extra           < 2
-    , containers              < 1
-    , deepseq                 < 2
-    , extra                   < 2
-    , filepath                < 2
-    , lens                    < 6
-    , memory                  < 1
-    , pretty-hex              < 2
     , regex-tdfa              < 2
     , template-haskell        < 3
-    , time                    < 2
-    , wl-pprint-text          < 2
-    , word8                   < 1
-    , exceptions
-    , yesod
-    , wai
-    , network
-    , blaze-markup
-    , trace-embrace
-    , typelits-printf
+    , wai                     < 4
+    , network                 < 4
+    , blaze-markup            < 1
+    , trace-embrace           < 2
+    , typelits-printf         < 1
 
 test-suite test
   import: base
