@@ -42,19 +42,20 @@ let
         '';})
     else drv;
   makeStatic = drv:
-    drv.overrideAttrs(oa: {
-      configureFlags =
-        (oa.configureFlags or []) ++
-        (if staticBuild then staticExtraLibs else []);
-    });
-
-  bindNetTool = drv:
-    drv.overrideAttrs(oa: {
-      propagatedNativeBuildInputs = [ pkgs.iproute2 pkgs.iptables pkgs.makeWrapper ];
-      postFixup = ''
-        wrapProgram $out/bin/vpn-router --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.iptables pkgs.iproute2 ]}
-      '';
-    });
+    drv.overrideAttrs(oa:
+      (if staticBuild
+       then
+         {
+           configureFlags = (oa.configureFlags or []) ++ staticExtraLibs;
+         }
+       else
+         {
+           propagatedNativeBuildInputs = [ pkgs.iproute2 pkgs.iptables pkgs.makeWrapper ];
+           postFixup = ''
+             wrapProgram $out/bin/vpn-router --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.iptables pkgs.iproute2 ]}
+           '';
+         }
+      ));
 
   sources = [
     "^(app|src|test).*$"
@@ -64,7 +65,7 @@ let
 
   base = hsPkgs.callCabal2nix "vpn-router" (lib.sourceByRegex ./. sources) { };
   vpn-router-overlay = _hf: _hp: {
-    vpn-router = assertStatic (makeStatic (dontHaddock (bindNetTool base)));
+    vpn-router = assertStatic (makeStatic (dontHaddock base));
   };
   baseHaskellPkgs = pkgs.haskell.packages.${ghcName};
   hsOverlays = [ hsPkgSetOverlay vpn-router-overlay ];
@@ -74,39 +75,10 @@ let
       hsOverlays;
   });
 
-  hls = pkgs.haskell.lib.overrideCabal hsPkgs.haskell-language-server
-    (_: { enableSharedExecutables = true; });
-
-  shell = hsPkgs.shellFor {
-    packages = p: [ p.vpn-router ];
-    nativeBuildInputs =
-      if staticBuild
-      then []
-      else (with pkgs; [ cabal-install pandoc niv git ]) ++ [ hls hsPkgs.upload-doc-to-hackage ];
-    shellHook =
-      strings.concatStrings
-        [''export PS1='$ '
-           echo $(dirname $(dirname $(which ghc)))/share/doc > .haddock-ref
-         ''
-         (if staticBuild
-          then ''
-                 function cabal() {
-                   case $1 in
-                     build|test) ${pkgs.cabal-install.out}/bin/cabal "$@" \
-                               ${concatStringsSep " " staticExtraLibs} ;;
-                     *) ${pkgs.cabal-install.out}/bin/cabal "$@" ;;
-                   esac
-                 }
-               ''
-          else ""
-         )];
-  };
-
   vpn-router = hsPkgs.vpn-router;
 in {
   inherit hsPkgs;
   inherit ghcName;
   inherit pkgs;
-  inherit shell;
   inherit vpn-router;
 }
