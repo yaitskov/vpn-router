@@ -46,6 +46,14 @@ let
         (if staticBuild then staticExtraLibs else []);
     });
 
+  bindNetTool = drv:
+    drv.overrideAttrs(oa: {
+      propagatedNativeBuildInputs = [ pkgs.iproute2 pkgs.iptables pkgs.makeWrapper ];
+      postFixup = ''
+        wrapProgram $out/bin/vpn-router --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.iptables pkgs.iproute2 ]}
+      '';
+    });
+
   sources = [
     "^(app|src|test).*$"
     "^(changelog[.]md|LICENSE.*)$"
@@ -53,7 +61,7 @@ let
   ];
 
   base = hsPkgs.callCabal2nix "vpn-router" (lib.sourceByRegex ./. sources) { };
-  vpn-router-overlay = _hf: _hp: { vpn-router = assertStatic (makeStatic base); };
+  vpn-router-overlay = _hf: _hp: { vpn-router = assertStatic (makeStatic (bindNetTool base)); };
   baseHaskellPkgs = pkgs.haskell.packages.${ghcName};
   hsOverlays = [ hsPkgSetOverlay vpn-router-overlay ];
   hsPkgs = baseHaskellPkgs.override (old: {
