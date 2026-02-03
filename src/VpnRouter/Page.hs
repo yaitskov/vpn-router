@@ -15,6 +15,7 @@ import VpnRouter.Prelude
 import Yesod.Core
     ( logInfo,
       lucius,
+      julius,
       getYesod,
       redirect,
       mkYesod,
@@ -70,6 +71,14 @@ getHomeR = do
     layout body = do
       defaultLayout $ do
         setTitle "VPN Router"
+        toWidget
+          [julius|
+            document.addEventListener("visibilitychange", (event) => {
+              if (document.visibilityState == "visible") {
+                window.location.reload();
+              }
+            });
+          |]
         css
         body
     css =
