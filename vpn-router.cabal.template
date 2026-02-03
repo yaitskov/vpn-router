@@ -59,15 +59,15 @@ library
   autogen-modules:
     Paths_vpn_router
   build-depends:
+    , blaze-markup            < 1
     , conduit                 < 2
     , conduit-extra           < 2
+    , network                 < 4
     , regex-tdfa              < 2
     , template-haskell        < 3
-    , wai                     < 4
-    , network                 < 4
-    , blaze-markup            < 1
     , trace-embrace           < 2
     , typelits-printf         < 1
+    , wai                     < 4
 
 test-suite test
   import: base

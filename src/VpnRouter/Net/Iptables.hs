@@ -15,6 +15,8 @@ import VpnRouter.Net.Types
       parseIpV4 )
 import VpnRouter.Prelude
 
+iptables :: IsString s => s
+iptables = "iptables"
 
 listMarkedSources :: NetM m => m [(LineNumber, PacketMark, ClientAdr)]
 listMarkedSources = do
@@ -23,15 +25,15 @@ listMarkedSources = do
     ExitSuccess -> pure l
     ExitFailure erc -> ex $ printf "Failed to list marking rules; due %d" erc
   where
-    bashCmd = "iptables -t mangle -L PREROUTING -n --line-numbers"
+    bashCmd = iptables <> " -t mangle -L PREROUTING -n --line-numbers"
 
 rmMarkingRule  :: NetM m => LineNumber -> m ()
 rmMarkingRule ln =
-  bash "iptables" [ "-t", "mangle", "-D", "PREROUTING", show ln]
+  bash iptables [ "-t", "mangle", "-D", "PREROUTING", show ln]
 
 addMarkingRule :: NetM m => ClientAdr -> PacketMark -> m ()
 addMarkingRule ca (PacketMark pm) =
-  bash "iptables" [ "-t", "mangle", "-I", "PREROUTING"
+  bash iptables [ "-t", "mangle", "-I", "PREROUTING"
                   , "-s", clientAdrToDec4 ca
                   , "-j", "MARK"
                   , "--set-mark", show pm

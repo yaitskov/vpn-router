@@ -18,6 +18,8 @@ import VpnRouter.Net.Types
 import VpnRouter.App ( NetM, ex )
 import VpnRouter.Bash ( bash )
 
+ip :: IsString s => s
+ip = "ip"
 
 mainRoutingTableName :: RoutingTableId
 mainRoutingTableName = RoutingTableName "main"
@@ -54,29 +56,28 @@ routingTableMarks rt = do
     ExitSuccess -> pure l
     ExitFailure erc -> ex $ printf "Failed to list ip rules for routingi table %s; error code %d" rt erc
   where
-    bashCmd = printf "ip rule list table %s" rt
+    bashCmd = printf "%s rule list table %s" (ip :: Text) rt
 
 addDefaultRouteToRoutingTable :: NetM m => RoutingTableId -> Tagged IspNic Text -> Tagged Gateway HostIp -> m ()
 addDefaultRouteToRoutingTable rt (Tagged isp) (Tagged gw) =
-  bash "ip" [ "route", "add", "default"
-            , "via", hostIpToDec gw
-            , "dev", isp
-            , "table", printf "%s" rt
-            ]
+  bash ip [ "route", "add", "default"
+          , "via", hostIpToDec gw
+          , "dev", isp
+          , "table", printf "%s" rt
+          ]
 
 flushRouteCache :: NetM m =>  m ()
-flushRouteCache = bash "ip" [ "route", "flush", "cache" ]
+flushRouteCache = bash ip [ "route", "flush", "cache" ]
 
 unmarkRoutingTable :: NetM m => RoutingTableId -> PacketMark -> m ()
 unmarkRoutingTable rt pm = do
   mapM_ unmark =<< (reverse . sort . fmap fst . filter ((pm ==) . snd) <$> routingTableMarks rt)
   where
-    unmark (RuleId rid) =
-      bash "ip" ["rule", "del", "pref", show rid]
+    unmark (RuleId rid) = bash ip ["rule", "del", "pref", show rid]
 
 deleteDefaultRoute :: NetM m => RoutingTableId ->  m ()
 deleteDefaultRoute rt =
-  bash "ip" [ "route", "del", "default", "table", printf "%s" rt]
+  bash ip [ "route", "del", "default", "table", printf "%s" rt]
 
 -- default via 192.168.1.1 dev wlp2s0 table 3
 defaultRoutePat :: String
@@ -113,8 +114,8 @@ listDefaultsOfRoutingTable rt = do
     ExitSuccess -> pure l
     ExitFailure erc -> ex $ printf "Failed to list ip routes for routing table %s; error code %d" rt erc
   where
-    bashCmd = "ip route show table all"
+    bashCmd = (ip :: String) <> " route show table all"
 
 addMarkToRoutingTable :: NetM m => RoutingTableId -> PacketMark -> m ()
 addMarkToRoutingTable rt (PacketMark pm) =
-  bash "ip" ["rule", "add", "fwmark", show pm, "table", printf "%s" rt]
+  bash ip ["rule", "add", "fwmark", show pm, "table", printf "%s" rt]
