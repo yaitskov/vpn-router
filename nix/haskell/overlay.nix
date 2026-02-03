@@ -16,6 +16,12 @@ in hfinal: hprev:
     (dontCheck (hfinal.callCabal2nix a.name a.source { }))) [
     ])) // {
       "upload-doc-to-hackage" = hfinal.callPackage sources.upload-doc-to-hackage {};
+      "shakespeare" = dontCheck (hfinal.callHackageDirect
+        { pkg = "shakespeare";
+          ver = "2.2.0";
+          sha256 = "sha256-GaeC8dp0KiiNpIC867CO6p2kxgBEQsVaBo+iGbXG3Ek=";
+        } {});
+
       "th-lock" = hfinal.callHackageDirect
         { pkg = "th-lock";
           ver = "0.0.4";
