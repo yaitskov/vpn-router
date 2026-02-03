@@ -3,6 +3,7 @@
 {-# LANGUAGE QuasiQuotes, TypeFamilies #-}
 module VpnRouter.Page where
 
+import UnliftIO.MVar ( MVar, withMVar )
 import VpnRouter.Net.Types ( RoutingTableId, PacketMark )
 import VpnRouter.Net
     ( getClientAdr,
@@ -30,6 +31,7 @@ data Ypp
   = Ypp
   { packetMark :: PacketMark
   , routingTable :: RoutingTableId
+  , netLock :: MVar ()
   }
 
 
@@ -113,7 +115,8 @@ postOffR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to disable VPN" ca
-  turnOffVpnFor ca ap.packetMark
+  withMVar ap.netLock $ \() ->
+    turnOffVpnFor ca ap.packetMark
   redirect HomeR
 
 postOnR :: HandlerFor Ypp Html
@@ -121,5 +124,6 @@ postOnR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to enable VPN" ca
-  turnOnVpnFor ca ap.packetMark
+  withMVar ap.netLock $ \() ->
+    turnOnVpnFor ca ap.packetMark
   redirect HomeR

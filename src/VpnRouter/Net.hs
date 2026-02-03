@@ -69,7 +69,6 @@ findMarkingLine ca pm = fmap oneOf3 . find lineP <$> listMarkedSources
   where
     lineP (_, lpm, lca) = pm == lpm && ca == lca
 
-
 turnOffVpnFor :: NetM m => ClientAdr -> PacketMark -> m ()
 turnOffVpnFor ca pm =
   findMarkingLine ca pm >>= \case
