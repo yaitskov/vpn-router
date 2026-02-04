@@ -5,6 +5,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/bc16855ba53f3cb6851903a393e7073d1b5911e7";
     flake-utils.url = "github:numtide/flake-utils";
+    # uphack.url = "github:yaitskov/upload-doc-to-hackage";
   };
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -93,6 +94,11 @@
             haskellPackages.haskell-language-server
             ghcid
             cabal-install
+            (import
+              (fetchTarball {
+                url = "https://github.com/yaitskov/upload-doc-to-hackage/archive/d342d5659821bcce0233aee38239c3965677221a.tar.gz";
+                sha256 = "1b9z5nfz654j6ayaacnd5r0zmfxp2b91x30rkc2cp8rkfg908gd2";
+              }) { inherit pkgs; })
           ];
           inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
         };
