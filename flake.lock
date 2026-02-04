@@ -37,7 +37,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "uphack": "uphack"
       }
     },
     "systems": {
@@ -52,6 +53,22 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "uphack": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1757595711,
+        "narHash": "sha256-9vOuWhJhPKnHBPZj/+6AJ7E0K2qezec7d8zW42n9j9o=",
+        "owner": "yaitskov",
+        "repo": "upload-doc-to-hackage",
+        "rev": "29d4066f4f8a5a1a194d9b701f9b272dda85c3aa",
+        "type": "github"
+      },
+      "original": {
+        "owner": "yaitskov",
+        "repo": "upload-doc-to-hackage",
         "type": "github"
       }
     }
