@@ -4,6 +4,7 @@
 /niv
 .haddock-ref
 .*ndc
+.*ndc-*-link
 /design
 /dist-newstyle
 /result-2
