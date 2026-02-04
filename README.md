@@ -18,7 +18,7 @@ Android and Windows.
 
 There are several ways to install the app:
 - with conventional Haskell tools directly
-- nix-build
+- nix build
 - download the statically link version of  [vpn-router](https://github.com/yaitskov/vpn-router/releases/download/v0.0.1/vpn-router) from github
 - nixos module
 
@@ -100,14 +100,14 @@ Default values for gateway and device are dynamically detected.
 HLS should be available inside the dev environment.
 
 ```shell
-$ nix-shell
+$ nix develop
 $ emacs src/VpnRouter/Net.hs &
 $ cabal build
 $ cabal test
 ```
 
 ```shell
-$ nix-build
+$ nix build
 $ sudo ./result/bin/vpn-router run
 ```
 
@@ -116,7 +116,7 @@ $ sudo ./result/bin/vpn-router run
 Static is not enabled by default, because GitHub CI job times out.
 
 ```shell
-nix-build --arg staticBuild true
+nix build .#static
 # faster build on beefy machine
-nix-build --cores 20 -j 20 --arg staticBuild true
+nix build .#static --cores 20 -j 20
 ```
