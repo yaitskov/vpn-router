@@ -18,7 +18,7 @@ Android and Windows.
 
 There are several ways to install the app:
 - with conventional Haskell tools directly
-- nix build
+- `nix build .#dynamic`
 - download the statically link version of  [vpn-router](https://github.com/yaitskov/vpn-router/releases/download/v0.0.1/vpn-router) from github
 - nixos module
 
