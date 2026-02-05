@@ -9,10 +9,6 @@
       url = "github:yaitskov/upload-doc-to-hackage";
       flake = false;
     };
-    demo.url = {
-      url = path:/home/don/pro/haskell/my/vpn-router/demo;
-      flake = false;
-    };
   };
   outputs = { self, nixpkgs, flake-utils, uphack, demo }:
     flake-utils.lib.eachDefaultSystem (system:
@@ -88,12 +84,8 @@
           in
             bindNetTools (dontHaddock (haskellPackages.callCabal2nix packageName self rec {}));
         packageName = "vpn-router";
-        democ = import demo { inherit pkgs; };
-        tt = drv:
-          builtins.trace
-            "ooooooooooooooooooooooooo ${democ.hello}"
-            drv;
         pkgs = nixpkgs.legacyPackages.${system};
+        haskellPackages = pkgs.haskell.packages.${ghcName};
       in {
         packages.${packageName} = mkDynamic pkgs packageName;
         packages.default = self.packages.${system}.${packageName};
@@ -102,12 +94,11 @@
         defaultPackage = self.packages.${system}.default;
 
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            haskellPackages.haskell-language-server
+          buildInputs = [ haskellPackages.haskell-language-server ] ++ (with pkgs; [
             ghcid
             cabal-install
             (import uphack { inherit pkgs; })
-          ];
+          ]);
           inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
         };
         devShell = self.devShells.${system}.default;
