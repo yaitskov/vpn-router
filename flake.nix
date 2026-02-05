@@ -97,6 +97,7 @@
           buildInputs = [ haskellPackages.haskell-language-server ] ++ (with pkgs; [
             ghcid
             cabal-install
+            pandoc
             (import uphack { inherit pkgs; })
           ]);
           inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
