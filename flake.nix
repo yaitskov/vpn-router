@@ -9,8 +9,12 @@
       url = "github:yaitskov/upload-doc-to-hackage";
       flake = false;
     };
+    demo.url = {
+      url = path:/home/don/pro/haskell/my/vpn-router/demo;
+      flake = false;
+    };
   };
-  outputs = { self, nixpkgs, flake-utils, uphack }:
+  outputs = { self, nixpkgs, flake-utils, uphack, demo }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
@@ -84,11 +88,16 @@
           in
             bindNetTools (dontHaddock (haskellPackages.callCabal2nix packageName self rec {}));
         packageName = "vpn-router";
+        democ = import demo { inherit pkgs; };
+        tt = drv:
+          builtins.trace
+            "ooooooooooooooooooooooooo ${democ.hello}"
+            drv;
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         packages.${packageName} = mkDynamic pkgs packageName;
         packages.default = self.packages.${system}.${packageName};
-        packages.dynamic = self.packages.${system}.${packageName};
+        packages.dynamic = tt self.packages.${system}.${packageName};
         packages.static = mkStatic packageName;
         defaultPackage = self.packages.${system}.default;
 
