@@ -1,18 +1,5 @@
 {
   "nodes": {
-    "demo": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1770278031,
-        "narHash": "sha256-f3Ij6DxACkQdu/agXKvZLWEieQMoe7NcV+xN5HTwu/M=",
-        "path": "/home/don/pro/haskell/my/vpn-router/demo/default.nix",
-        "type": "path"
-      },
-      "original": {
-        "path": "/home/don/pro/haskell/my/vpn-router/demo/default.nix",
-        "type": "path"
-      }
-    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -49,7 +36,6 @@
     },
     "root": {
       "inputs": {
-        "demo": "demo",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "uphack": "uphack"

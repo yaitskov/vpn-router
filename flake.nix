@@ -10,7 +10,7 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, flake-utils, uphack, demo }:
+  outputs = { self, nixpkgs, flake-utils, uphack }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
@@ -89,7 +89,7 @@
       in {
         packages.${packageName} = mkDynamic pkgs packageName;
         packages.default = self.packages.${system}.${packageName};
-        packages.dynamic = tt self.packages.${system}.${packageName};
+        packages.dynamic = self.packages.${system}.${packageName};
         packages.static = mkStatic packageName;
         defaultPackage = self.packages.${system}.default;
 
