@@ -162,7 +162,7 @@
                     group = "vpn-router";
                     permissions = "u=rx,g=rx,o=";
                     capabilities = "cap_net_admin+pe";
-                    source = "${self.packages.${system}.${packageName}}/bin/vpn-router";
+                    source = "${self.packages.dynamic}/bin/vpn-router";
                   };
                 };
                 polkit = {
