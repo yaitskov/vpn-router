@@ -36,6 +36,11 @@ in {
       default = null;
       description = "network device name (eg eth0)";
     };
+    vpn-service = mkOption {
+      type = types.str;
+      default = "AmneziaVPN.service";
+      description = "VPN service name to be restarted up on request";
+    };
   };
   config = lib.mkIf cfg.enable {
     users = {
@@ -81,6 +86,7 @@ in {
             ops = ["-p" (toString cfg.port)
                    "-m" (toString cfg.mark)
                    "-t" (toString cfg.routing-table)
+                   "-s" cfg.vpn-service
                   ]
                   ++ optionals (cfg.gateway != null) [ "-g" cfg.gateway ]
                   ++ optionals (cfg.dev != null) [ "-d" cfg.dev ];
