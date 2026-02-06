@@ -76,6 +76,7 @@ in {
     };
     systemd.services.vpn-router = {
       wantedBy = [ "multi-user.target" ];
+      after = [ "network.target" ];
       enable = true;
       serviceConfig = {
         User = "vpn-router";
