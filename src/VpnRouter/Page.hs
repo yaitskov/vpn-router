@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -freduction-depth=0 #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, TypeFamilies #-}
@@ -22,7 +23,6 @@ import VpnRouter.Prelude
 
 import Yesod.Core
 
-
 data Ypp
   = Ypp
   { packetMark :: PacketMark
@@ -36,23 +36,36 @@ mkYesod "Ypp" [parseRoutes|
 / HomeR GET
 /off OffR POST
 /on OnR POST
+/confirm-restart ConfirmRestartR GET
 /restart-vpn  RestartVpnR POST
 |]
 
 instance Yesod Ypp
 
+getConfirmRestartR :: Handler Html
+getConfirmRestartR = do
+  cdr <- getClientAdr
+  $(logInfo) $ printf "Client %s is going to restart VPN" cdr
+  layout
+    [whamlet|
+            <div class=ipaddr>#{cdr}
+            <form method=post action=@{RestartVpnR}>
+              <div class=butdiv>
+                <button class=red>RESTART VPN
+            |]
 
-getHomeR :: Handler Html -- For Ypp Html
+getHomeR :: Handler Html
 getHomeR = do
   cdr <- getClientAdr
   $(logInfo) $ printf "Client %s visited home page" cdr
   app <- getYesod
   useOrBypass <- mkUseOrBypass app.packetMark cdr
-  layout
+  layout $ do
+    restartVpnCss
     [whamlet|
             <div class=ipaddr>#{cdr}
             <div class=restart-vpn>
-              <form method=post action=@{RestartVpnR}>
+              <form method=get action=@{ConfirmRestartR}>
                 <button title="restart VPN">↻
             ^{useOrBypass}
             |]
@@ -73,20 +86,6 @@ getHomeR = do
       isVpnOff (pm, cdr) >>= \case
         True -> pure useVpn
         False -> pure bypassVpn
-    layout body = do
-      defaultLayout $ do
-        setTitle "VPN Router"
-        toWidget
-          [julius|
-            document.addEventListener("visibilitychange", (event) => {
-              if (document.visibilityState == "visible") {
-                window.location.reload();
-              }
-            });
-          |]
-        css
-        restartVpnCss
-        body
     restartVpnCss =
       toWidget [lucius|
                       .restart-vpn {
@@ -102,49 +101,66 @@ getHomeR = do
                         border-color: #7a83d1;
                       }
                       |]
-    css =
-      toWidget [lucius|
-                      body { overflow: hidden; }
-                      .butdiv {
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                        background: radial-gradient(circle, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
-                      }
-                      button {
-                        font-weight: bold;
-                        font-size: xxx-large;
-                        border-radius: 4vh;
-                        padding: 2vh 3vh;
-                        border: 8px black solid;
-                      }
-                      button.red {
-                        color: #fc2c2c;
-                        border-color: #fc2c2c;
-                        background: linear-gradient(33deg, rgb(124 133 167) 0%, rgb(182 182 236) 12%, rgb(136 246 143) 99%);
-                      }
-                      button.green {
-                        color: green;
-                        border-color: green;
-                        background: linear-gradient(33deg, rgb(124 133 167) 0%, rgb(182 182 236) 12%, rgb(136 246 143) 99%);
-                      }
-                      .ipaddr {
-                        display: block;
-                        position: fixed;
-                        right: 4vh;
-                        bottom: 3vh;
-                        opacity: 0.5;
-                        font-size: xxx-large;
-                        background: transparent;
-                      }
-                      |]
+
+layout :: WidgetFor Ypp () -> HandlerFor Ypp Html
+layout body = do
+  defaultLayout $ do
+    setTitle "VPN Router"
+    toWidget
+      [julius|
+        document.addEventListener("visibilitychange", (event) => {
+          if (document.visibilityState == "visible") {
+            window.location.reload();
+          }
+        });
+      |]
+    css
+    body
+
+css :: WidgetFor Ypp ()
+css =
+  toWidget [lucius|
+                  body { overflow: hidden; }
+                  .butdiv {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    background: radial-gradient(circle, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
+                  }
+                  button {
+                    font-weight: bold;
+                    font-size: xxx-large;
+                    border-radius: 4vh;
+                    padding: 2vh 3vh;
+                    border: 8px black solid;
+                  }
+                  button.red {
+                    color: #fc2c2c;
+                    border-color: #fc2c2c;
+                    background: linear-gradient(33deg, rgb(124 133 167) 0%, rgb(182 182 236) 12%, rgb(136 246 143) 99%);
+                  }
+                  button.green {
+                    color: green;
+                    border-color: green;
+                    background: linear-gradient(33deg, rgb(124 133 167) 0%, rgb(182 182 236) 12%, rgb(136 246 143) 99%);
+                  }
+                  .ipaddr {
+                    display: block;
+                    position: fixed;
+                    right: 4vh;
+                    bottom: 3vh;
+                    opacity: 0.5;
+                    font-size: xxx-large;
+                    background: transparent;
+                  }
+                  |]
 
 postOffR :: HandlerFor Ypp Html
 postOffR = do
   ca <- getClientAdr
   ap <- getYesod
-  $(logInfo) $ printf "Client %s asked to disable VPN for him" ca
+  $(logInfo) $ printf "Client %s asked to disable VPN just for him" ca
   withMVar ap.netLock $ \() ->
     turnOffVpnFor ca ap.packetMark
   redirect HomeR
@@ -153,7 +169,7 @@ postOnR :: HandlerFor Ypp Html
 postOnR = do
   ca <- getClientAdr
   ap <- getYesod
-  $(logInfo) $ printf "Client %s asked to enable VPN for him" ca
+  $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
   withMVar ap.netLock $ \() ->
     turnOnVpnFor ca ap.packetMark
   redirect HomeR
