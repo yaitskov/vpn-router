@@ -24,7 +24,7 @@ There are several ways to install the app:
 
 ### NixOS module
 
-1. Copy [vpn-router.nix](https://github.com/yaitskov/vpn-router/blob/v0.0.1/nixos/vpn-router.nix) to `/etc/nixos`.
+1. Copy [vpn-router.nix](https://github.com/yaitskov/vpn-router/blob/v0.0.1/nixos/non-flake-vpn-router.nix) to `/etc/nixos`.
 2. Modify `/etc/nixos/configuration.nix` as follows:
 
 ``` nix

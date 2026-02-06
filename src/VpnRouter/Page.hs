@@ -4,7 +4,7 @@
 module VpnRouter.Page where
 
 import UnliftIO.MVar ( MVar, withMVar )
-import VpnRouter.Net.Types ( RoutingTableId, PacketMark )
+import VpnRouter.Net.Types ( RoutingTableId, PacketMark, VpnService )
 import VpnRouter.Net
     ( getClientAdr,
       isVpnOff,
@@ -13,6 +13,8 @@ import VpnRouter.Net
       turnOnVpnFor )
 import VpnRouter.Prelude
     ( ($),
+      Tagged,
+      Text,
       Monad((>>=)),
       Applicative(pure),
       Bool(False, True),
@@ -25,6 +27,7 @@ data Ypp
   = Ypp
   { packetMark :: PacketMark
   , routingTable :: RoutingTableId
+  , vpnService :: Tagged VpnService Text
   , netLock :: MVar ()
   }
 
@@ -160,5 +163,5 @@ postRestartVpnR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to restart VPN service" ca
-  withMVar ap.netLock $ \() -> restartVpn
+  withMVar ap.netLock $ \() -> restartVpn ap.vpnService
   redirect HomeR

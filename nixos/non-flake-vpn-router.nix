@@ -4,7 +4,8 @@
 , ...
 }: let
   cfg = config.programs.vpn-router;
-  vpn-router = import (fetchTarball "https://github.com/yaitskov/vpn-router/archive/master.tar.gz") {};
+  vpn-router = (builtins.getFlake "https://github.com/yaitskov/vpn-router/archive/master.tar.gz").packages.x86_64-linux.vpn-router;
+  # vpn-router = (builtins.getFlake "path:/home/don/pro/haskell/my/vpn-router/vpn-router").packages.x86_64-linux.vpn-router;
   inherit (lib) mkOption types optionals;
   inherit (types) ints;
 in {
@@ -44,12 +45,30 @@ in {
         isSystemUser = true;
       };
     };
-    security.wrappers.vpn-router-cap = {
-      owner = "root";
-      group = "vpn-router";
-      permissions = "u=rx,g=rx,o=";
-      capabilities = "cap_net_admin+pe";
-      source = "${vpn-router.vpn-router}/bin/vpn-router";
+    security = {
+      wrappers = {
+        vpn-router-cap = {
+          owner = "root";
+          group = "vpn-router";
+          permissions = "u=rx,g=rx,o=";
+          capabilities = "cap_net_admin+pe";
+          source = "${vpn-router}/bin/vpn-router";
+        };
+      };
+      polkit = {
+        enable = true;
+        extraConfig = ''
+          polkit.addRule(function (action, subject) {
+            var unit_name = action.lookup("unit");
+            if ("AmneziaVPN.service" == unit_name &&
+                 subject.isInGroup("vpn-router") &&
+                "restart" == action.lookup("verb"))
+            {
+                return polkit.Result.YES;
+            }
+          });
+        '';
+      };
     };
     systemd.services.vpn-router = {
       wantedBy = [ "multi-user.target" ];

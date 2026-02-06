@@ -20,6 +20,6 @@ runCmd = \case
     mapM_ checkAppOnPath [ip, iptables, systemctl]
     cleanup rs.routingTableId rs.packetMark
     manualInit rs.routingTableId rs.packetMark rs.ispNic rs.gatewayHost
-    warp (untag rs.httpPortToListen) . Ypp rs.packetMark rs.routingTableId =<< newMVar ()
+    warp (untag rs.httpPortToListen) . Ypp rs.packetMark rs.routingTableId rs.vpnService =<< newMVar ()
   VpnRouterVersion ->
     putStrLn $ "Version: " <> showVersion version

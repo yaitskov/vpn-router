@@ -6,6 +6,7 @@ import VpnRouter.Net.IpTool
     ( mainRoutingTableName, listDefaultsOfRoutingTable )
 import VpnRouter.Net.Types
     ( RoutingTableId(RoutingTableId),
+      VpnService,
       PacketMark(..),
       HostIp,
       Gateway,
@@ -30,11 +31,11 @@ import VpnRouter.Prelude
 
 
 data HttpPort
-
 data CmdArgs
   = RunService
     { ispNic :: Tagged IspNic Text
     , gatewayHost :: Tagged Gateway HostIp
+    , vpnService :: Tagged VpnService Text
     , routingTableId :: RoutingTableId
     , packetMark :: PacketMark
     , httpPortToListen :: Tagged HttpPort Int
@@ -65,12 +66,13 @@ execWithArgs a = a =<< liftIO (execParser $ info (cmdp <**> helper) phelp)
       RunService
       <$> (Tagged @IspNic <$> ispNicOp)
       <*> (Tagged @Gateway <$> gatewayHostOp)
+      <*> (Tagged @VpnService <$> vpnServiceOp)
       <*> routingTableOp
       <*> packetMarkOp
       <*> portOption
     cmdp =
       hsubparser
-        (  command "run" (infoP serviceP $ "launch the service exposed over HTTP")
+        (  command "run" (infoP serviceP "launch the service exposed over HTTP")
         <> command "version" (infoP (pure VpnRouterVersion) "print program version"))
 
     infoP p h = info p (progDesc h <> fullDesc)
@@ -85,7 +87,15 @@ ispNicOp =
              showDefault <>
              help "network device name connected to the Internet")
 
+vpnServiceOp :: Parser Text
+vpnServiceOp =
+  strOption (long "service" <> short 's' <>
+             value "AmneziaVPN.service" <>
+             showDefault <>
+             help "VPN service name to be restarted on request")
+
 -- default via 192.168.1.1 dev wlp2s0 proto dhcp src 192.168.1.103 metric 600
+{-# NOINLINE defaultGwNic #-}
 defaultGwNic :: (Tagged Gateway HostIp, Tagged IspNic Text)
 defaultGwNic = unsafePerformIO go
   where
@@ -95,7 +105,7 @@ defaultGwNic = unsafePerformIO go
         [(gw, nic)] ->
           pure (gw, nic)
         [] -> do
-          putStrLn $ "No default route in the main routing table"
+          putStrLn "No default route in the main routing table"
           pure defDef
         o -> do
           putStrLn $ "Multiple default routes in the main routing table: " <> show o

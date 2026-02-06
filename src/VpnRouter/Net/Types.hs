@@ -12,6 +12,7 @@ import VpnRouter.Prelude hiding (decodeUtf8, lines, concatMap)
 
 data IspNic
 data Gateway
+data VpnService
 
 newtype LineNumber = LineNumber Int deriving newtype (Eq, Ord, Show, Read)
 

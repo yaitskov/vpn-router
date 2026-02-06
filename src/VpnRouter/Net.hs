@@ -3,10 +3,11 @@ module VpnRouter.Net where
 import Network.Socket ( SockAddr(SockAddrInet) )
 import Network.Wai ( Request(remoteHost) )
 import VpnRouter.App ( NetM )
-import VpnRouter.Bash
+import VpnRouter.Bash ( bash )
 import VpnRouter.Net.Types
     ( RoutingTableId,
       PacketMark,
+      VpnService,
       ClientAdr(..),
       HostIp(..),
       LineNumber,
@@ -45,9 +46,10 @@ manualInit rt pm isp gw = do
   addDefaultRouteToRoutingTable rt isp gw
   flushRouteCache
 
+{- HLINT ignore "Avoid reverse" -}
 clearMarkingLines :: NetM m => PacketMark -> m ()
 clearMarkingLines pm = do
-  mapM_ rmMarkingRule =<< fmap oneOf3 . reverse . sort . filter matchPm . $(tw "/pm" ) <$> listMarkedSources
+  mapM_ rmMarkingRule . fmap oneOf3 . reverse . sort . filter matchPm . $(tw "/pm" ) =<< listMarkedSources
   where
     matchPm (_, lpm, _) = lpm == pm
 
@@ -88,6 +90,6 @@ turnOnVpnFor ca pm =
 systemctl :: Text
 systemctl = "systemctl"
 
-restartVpn :: NetM m => m ()
-restartVpn =
-  bash systemctl ["restart", "AmneziaVPN.service"]
+restartVpn :: NetM m => Tagged VpnService Text -> m ()
+restartVpn ser =
+  bash systemctl ["restart", untag ser]
