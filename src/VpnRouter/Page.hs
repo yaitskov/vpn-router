@@ -19,6 +19,7 @@ import VpnRouter.Prelude
       Monad((>>=)),
       Applicative(pure),
       Bool(False, True),
+      Maybe(Nothing),
       printf )
 
 import Yesod.Core
@@ -40,7 +41,8 @@ mkYesod "Ypp" [parseRoutes|
 /restart-vpn  RestartVpnR POST
 |]
 
-instance Yesod Ypp
+instance Yesod Ypp where
+  makeSessionBackend _ = pure Nothing
 
 getConfirmRestartR :: Handler Html
 getConfirmRestartR = do
