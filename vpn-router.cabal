@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          vpn-router
-version:       0.0.1
+version:       0.0.2
 
 synopsis:      Switch VPN with web interface for LAN
 description:
@@ -31,7 +31,7 @@ description:
     #nixos-module#
     
     1.  Copy
-        <https://github.com/yaitskov/vpn-router/blob/v0.0.1/nixos/vpn-router.nix vpn-router.nix>
+        <https://github.com/yaitskov/vpn-router/blob/v0.0.1/nixos/non-flake-vpn-router.nix vpn-router.nix>
         to @\/etc\/nixos@.
     2.  Modify @\/etc\/nixos\/configuration.nix@ as follows:
     
