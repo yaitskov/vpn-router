@@ -1,13 +1,10 @@
-vpn-router:
 { config
 , lib
 , pkgs
 , ...
 }: let
   cfg = config.programs.vpn-router;
-  # vpn-router = (builtins.getFlake "https://github.com/yaitskov/vpn-router/archive/master.tar.gz").packages.x86_64-linux.vpn-router;
-  # vpn-router = (builtins.getFlake "path:/home/don/pro/haskell/my/vpn-router/vpn-router").packages.x86_64-linux.vpn-router;
-  inherit (lib) mkOption types optionals;
+   inherit (lib) mkOption types optionals;
   inherit (types) ints;
 in {
   options.programs.vpn-router = {
