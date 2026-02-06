@@ -104,6 +104,6 @@
         };
         devShell = self.devShells.${system}.default;
 
-        nixosModules.default = import ./nixos/flake-vpn-router.nix; #  (self.packages.dynamic) ;
+        nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.${system}.${packageName}) ;
       });
 }
