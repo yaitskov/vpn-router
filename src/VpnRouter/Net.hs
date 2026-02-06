@@ -3,6 +3,7 @@ module VpnRouter.Net where
 import Network.Socket ( SockAddr(SockAddrInet) )
 import Network.Wai ( Request(remoteHost) )
 import VpnRouter.App ( NetM )
+import VpnRouter.Bash
 import VpnRouter.Net.Types
     ( RoutingTableId,
       PacketMark,
@@ -79,3 +80,14 @@ turnOffVpnFor ca pm =
 turnOnVpnFor :: NetM m => ClientAdr -> PacketMark -> m ()
 turnOnVpnFor ca pm =
   findMarkingLine ca pm >>= mapM_ rmMarkingRule
+
+-- systemctl restart "AmneziaVPN.service"
+-- systemctl status "AmneziaVPN.service"
+-- amnezia service runs as root
+-- lets try polkit
+systemctl :: Text
+systemctl = "systemctl"
+
+restartVpn :: NetM m => m ()
+restartVpn =
+  bash systemctl ["restart", "AmneziaVPN.service"]

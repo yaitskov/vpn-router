@@ -8,25 +8,18 @@ import VpnRouter.Net.Types ( RoutingTableId, PacketMark )
 import VpnRouter.Net
     ( getClientAdr,
       isVpnOff,
+      restartVpn,
       turnOffVpnFor,
       turnOnVpnFor )
 import VpnRouter.Prelude
-    ( ($), Monad((>>=)), Bool(False, True), printf )
+    ( ($),
+      Monad((>>=)),
+      Applicative(pure),
+      Bool(False, True),
+      printf )
+
 import Yesod.Core
-    ( logInfo,
-      lucius,
-      julius,
-      getYesod,
-      redirect,
-      mkYesod,
-      setTitle,
-      whamlet,
-      parseRoutes,
-      Html,
-      Yesod(defaultLayout),
-      HandlerFor,
-      ToWidget(toWidget),
-      RenderRoute(renderRoute) )
+
 
 data Ypp
   = Ypp
@@ -40,6 +33,7 @@ mkYesod "Ypp" [parseRoutes|
 / HomeR GET
 /off OffR POST
 /on OnR POST
+/restart-vpn  RestartVpnR POST
 |]
 
 instance Yesod Ypp
@@ -50,24 +44,32 @@ getHomeR = do
   cdr <- getClientAdr
   $(logInfo) $ printf "Client %s visited home page" cdr
   app <- getYesod
-  isVpnOff (app.packetMark, cdr) >>= \case
-    True ->
-      layout
-        [whamlet|
-                <form method=post action=@{OnR}>
-                  <div class=ipaddr>#{cdr}
-                  <div class=butdiv>
-                    <button class=green>Turn VPN on
-                |]
-    False ->
-      layout
-        [whamlet|
-                <form method=post action=@{OffR}>
-                  <div class=ipaddr>#{cdr}
-                  <div class=butdiv>
-                    <button class=red>Turn VPN off
-                |]
+  useOrBypass <- mkUseOrBypass app.packetMark cdr
+  layout
+    [whamlet|
+            <div class=ipaddr>#{cdr}
+            <div class=restart-vpn>
+              <form method=post action=@{RestartVpnR}>
+                <button title="restart VPN">↻
+            ^{useOrBypass}
+            |]
   where
+    useVpn =
+      [hamlet|
+             <form method=post action=@{OnR}>
+               <div class=butdiv>
+                 <button class=green>Use VPN
+             |]
+    bypassVpn =
+      [hamlet|
+             <form method=post action=@{OffR}>
+               <div class=butdiv>
+                 <button class=red>Bypass VPN
+             |]
+    mkUseOrBypass pm cdr =
+      isVpnOff (pm, cdr) >>= \case
+        True -> pure useVpn
+        False -> pure bypassVpn
     layout body = do
       defaultLayout $ do
         setTitle "VPN Router"
@@ -80,7 +82,23 @@ getHomeR = do
             });
           |]
         css
+        restartVpnCss
         body
+    restartVpnCss =
+      toWidget [lucius|
+                      .restart-vpn {
+                        position: fixed;
+                        padding: 3vh;
+                      }
+                      .restart-vpn button {
+                        font-size: xxx-large;
+                        padding: 1vh;
+                        border-width: thin;
+                        background: transparent;
+                        color: #7a83d1;
+                        border-color: #7a83d1;
+                      }
+                      |]
     css =
       toWidget [lucius|
                       body { overflow: hidden; }
@@ -123,7 +141,7 @@ postOffR :: HandlerFor Ypp Html
 postOffR = do
   ca <- getClientAdr
   ap <- getYesod
-  $(logInfo) $ printf "Client %s asked to disable VPN" ca
+  $(logInfo) $ printf "Client %s asked to disable VPN for him" ca
   withMVar ap.netLock $ \() ->
     turnOffVpnFor ca ap.packetMark
   redirect HomeR
@@ -132,7 +150,15 @@ postOnR :: HandlerFor Ypp Html
 postOnR = do
   ca <- getClientAdr
   ap <- getYesod
-  $(logInfo) $ printf "Client %s asked to enable VPN" ca
+  $(logInfo) $ printf "Client %s asked to enable VPN for him" ca
   withMVar ap.netLock $ \() ->
     turnOnVpnFor ca ap.packetMark
+  redirect HomeR
+
+postRestartVpnR :: HandlerFor Ypp Html
+postRestartVpnR = do
+  ca <- getClientAdr
+  ap <- getYesod
+  $(logInfo) $ printf "Client %s asked to restart VPN service" ca
+  withMVar ap.netLock $ \() -> restartVpn
   redirect HomeR
