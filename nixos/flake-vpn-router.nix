@@ -1,6 +1,7 @@
 { config
 , lib
 , pkgs
+, vpn-router
 , ...
 }: let
   cfg = config.programs.vpn-router;
