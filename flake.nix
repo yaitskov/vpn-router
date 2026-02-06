@@ -87,7 +87,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
         haskellPackages = pkgs.haskell.packages.${ghcName};
       in {
-        nixosModules.default = import ./nixos/flake-vpn-router.nix;
+        nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.dynamic) ;
         packages.${packageName} = mkDynamic pkgs packageName;
         packages.default = self.packages.${system}.${packageName};
         packages.dynamic = self.packages.${system}.${packageName};
