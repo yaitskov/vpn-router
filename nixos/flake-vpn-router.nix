@@ -81,6 +81,8 @@ in {
       serviceConfig = {
         User = "vpn-router";
         Group = "vpn-router";
+        Restart = "always";
+        RestartSec = "8s";
         ExecStart =
           let
             ops = ["-p" (toString cfg.port)
