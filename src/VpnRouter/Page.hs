@@ -90,6 +90,7 @@ getConfirmRestartR = do
 
 getHomeR :: Handler Html
 getHomeR = do
+  alreadyExpired
   cdr <- getClientAdr
   $(logInfo) $ printf "Client %s visited home page" cdr
   app <- getYesod
@@ -145,8 +146,9 @@ chooseFavIcon cdr = do
     then [hamlet|<link rel="shortcut icon" href="open.svg" type="image/svg">|]
     else [hamlet|<link rel="shortcut icon" href="closed.svg" type="image/svg">|]
 
+
 layout :: ClientAdr -> WidgetFor Ypp () -> HandlerFor Ypp Html
-layout cdr body = do
+layout cdr body =
   defaultLayout $ do
     setTitle "VPN Router"
     chooseFavIcon cdr
