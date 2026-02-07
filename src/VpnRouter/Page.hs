@@ -31,12 +31,6 @@ import VpnRouter.Prelude
 
 import Yesod.Core
 
-closedDoor :: FavIcon
-closedDoor = FavIcon $(makeRelativeToProject "assets/closed.svg" >>= embedFile)
-
-openDoor :: FavIcon
-openDoor = FavIcon $(makeRelativeToProject "assets/open.svg" >>= embedFile)
-
 newtype FavIcon = FavIcon ByteString
 
 instance ToContent FavIcon where
@@ -58,6 +52,7 @@ mkYesod "Ypp" [parseRoutes|
 /open.svg OpenFavIconR GET
 /closed.svg ClosedFavIconR GET
 /favicon.ico FaviconR GET
+/github.svg GitHubR GET
 /off OffR POST
 /on OnR POST
 /confirm-restart ConfirmRestartR GET
@@ -67,14 +62,17 @@ mkYesod "Ypp" [parseRoutes|
 instance Yesod Ypp where
   makeSessionBackend _ = pure Nothing
 
+getGitHubR :: Handler FavIcon
+getGitHubR = pure $ FavIcon $(makeRelativeToProject "assets/github.svg" >>= embedFile)
+
 getOpenFavIconR :: Handler FavIcon
-getOpenFavIconR = pure openDoor
+getOpenFavIconR = pure $ FavIcon $(makeRelativeToProject "assets/open.svg" >>= embedFile)
 
 getClosedFavIconR :: Handler FavIcon
-getClosedFavIconR = pure closedDoor
+getClosedFavIconR = pure $ FavIcon $(makeRelativeToProject "assets/closed.svg" >>= embedFile)
 
 getFaviconR :: Handler FavIcon
-getFaviconR = pure closedDoor
+getFaviconR = getClosedFavIconR
 
 getConfirmRestartR :: Handler Html
 getConfirmRestartR = do
@@ -97,8 +95,12 @@ getHomeR = do
   isOff <- isVpnOff (app.packetMark, cdr)
   let useOrBypass = mkUseOrBypass isOff
   layout cdr $ do
+    gitHubLinkCss
     restartVpnCss
     [whamlet|
+            <div class=github-link>
+              <a href="https://github.com/yaitskov/vpn-router" alt="Link to VpnRoter project">
+                <img src="/github.svg"/>
             <div class=ipaddr>#{cdr}
             <div class=restart-vpn>
               <form method=get action=@{ConfirmRestartR}>
@@ -120,6 +122,18 @@ getHomeR = do
              |]
     mkUseOrBypass True = useVpn
     mkUseOrBypass False = bypassVpn
+    gitHubLinkCss =
+      toWidget [lucius|
+                      .github-link {
+                        position: fixed;
+                        padding: 4vh;
+                        right: 0vh;
+                      }
+                      .github-link img {
+                        width: 5vh;
+                        opacity: 0.4;
+                      }
+                      |]
     restartVpnCss =
       toWidget [lucius|
                       .restart-vpn {

@@ -12,7 +12,6 @@ import VpnRouter.Net.IpTool ( ip )
 import VpnRouter.Prelude
 import Yesod.Core ( warp )
 
-
 runCmd :: CmdArgs -> IO ()
 runCmd = \case
   rs@(RunService {}) -> do
