@@ -101,6 +101,10 @@
             (import uphack { inherit pkgs; })
           ]);
           inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
+          shellHook = ''
+            export PS1='N$ '
+            echo $(dirname $(dirname $(which ghc)))/share/doc > .haddock-ref
+          '';
         };
         devShell = self.devShells.${system}.default;
 

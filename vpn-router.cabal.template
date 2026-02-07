@@ -59,6 +59,8 @@ library
   autogen-modules:
     Paths_vpn_router
   build-depends:
+    , file-embed              < 1
+    , binary                  < 1
     , blaze-markup            < 1
     , conduit                 < 2
     , conduit-extra           < 2

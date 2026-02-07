@@ -4,8 +4,11 @@
 {-# LANGUAGE QuasiQuotes, TypeFamilies #-}
 module VpnRouter.Page where
 
+import Data.Binary.Builder (fromByteString)
+import Data.ByteString qualified as BS
+import Data.FileEmbed ( embedFile, makeRelativeToProject )
 import UnliftIO.MVar ( MVar, withMVar )
-import VpnRouter.Net.Types ( RoutingTableId, PacketMark, VpnService )
+import VpnRouter.Net.Types ( RoutingTableId, PacketMark, VpnService, ClientAdr )
 import VpnRouter.Net
     ( getClientAdr,
       isVpnOff,
@@ -14,15 +17,33 @@ import VpnRouter.Net
       turnOnVpnFor )
 import VpnRouter.Prelude
     ( ($),
-      Tagged,
-      Text,
+      fromIntegral,
       Monad((>>=)),
       Applicative(pure),
       Bool(False, True),
-      Maybe(Nothing),
-      printf )
+      Maybe(Nothing, Just),
+      Text,
+      Tagged,
+      printf,
+      (.),
+      ByteString )
+
 
 import Yesod.Core
+
+closedDoor :: FavIcon
+closedDoor = FavIcon $(makeRelativeToProject "assets/closed.svg" >>= embedFile)
+
+openDoor :: FavIcon
+openDoor = FavIcon $(makeRelativeToProject "assets/open.svg" >>= embedFile)
+
+newtype FavIcon = FavIcon ByteString
+
+instance ToContent FavIcon where
+  toContent (FavIcon bs) =
+    ContentBuilder (fromByteString bs) (Just . fromIntegral $ BS.length bs)
+instance ToTypedContent FavIcon where
+  toTypedContent = TypedContent typeSvg . toContent
 
 data Ypp
   = Ypp
@@ -32,9 +53,10 @@ data Ypp
   , netLock :: MVar ()
   }
 
-
 mkYesod "Ypp" [parseRoutes|
 / HomeR GET
+/open.svg OpenFavIconR GET
+/closed.svg ClosedFavIconR GET
 /off OffR POST
 /on OnR POST
 /confirm-restart ConfirmRestartR GET
@@ -44,11 +66,17 @@ mkYesod "Ypp" [parseRoutes|
 instance Yesod Ypp where
   makeSessionBackend _ = pure Nothing
 
+getOpenFavIconR :: Handler FavIcon
+getOpenFavIconR = pure openDoor
+
+getClosedFavIconR :: Handler FavIcon
+getClosedFavIconR = pure closedDoor
+
 getConfirmRestartR :: Handler Html
 getConfirmRestartR = do
   cdr <- getClientAdr
   $(logInfo) $ printf "Client %s is going to restart VPN" cdr
-  layout
+  layout cdr
     [whamlet|
             <div class=ipaddr>#{cdr}
             <form method=post action=@{RestartVpnR}>
@@ -61,8 +89,9 @@ getHomeR = do
   cdr <- getClientAdr
   $(logInfo) $ printf "Client %s visited home page" cdr
   app <- getYesod
-  useOrBypass <- mkUseOrBypass app.packetMark cdr
-  layout $ do
+  isOff <- isVpnOff (app.packetMark, cdr)
+  let useOrBypass = mkUseOrBypass isOff
+  layout cdr $ do
     restartVpnCss
     [whamlet|
             <div class=ipaddr>#{cdr}
@@ -84,10 +113,8 @@ getHomeR = do
                <div class=butdiv>
                  <button class=red>Bypass VPN
              |]
-    mkUseOrBypass pm cdr =
-      isVpnOff (pm, cdr) >>= \case
-        True -> pure useVpn
-        False -> pure bypassVpn
+    mkUseOrBypass True = useVpn
+    mkUseOrBypass False = bypassVpn
     restartVpnCss =
       toWidget [lucius|
                       .restart-vpn {
@@ -104,10 +131,21 @@ getHomeR = do
                       }
                       |]
 
-layout :: WidgetFor Ypp () -> HandlerFor Ypp Html
-layout body = do
+
+chooseFavIcon :: ClientAdr -> WidgetFor Ypp ()
+chooseFavIcon cdr = do
+  app <- getYesod
+  isOff <- isVpnOff (app.packetMark, cdr)
+  toWidgetHead $
+    if isOff
+    then [hamlet|<link rel="shortcut icon" href="open.svg" type="image/svg">|]
+    else [hamlet|<link rel="shortcut icon" href="closed.svg" type="image/svg">|]
+
+layout :: ClientAdr -> WidgetFor Ypp () -> HandlerFor Ypp Html
+layout cdr body = do
   defaultLayout $ do
     setTitle "VPN Router"
+    chooseFavIcon cdr
     toWidget
       [julius|
         document.addEventListener("visibilitychange", (event) => {
