@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -freduction-depth=0 #-}
+{-# LANGUAGE MultilineStrings #-}
 module VpnRouter.Net.Iptables where
 
 import Data.Conduit.Process ( sourceCmdWithConsumer )
@@ -23,7 +24,9 @@ listMarkedSources = do
   (ec, l) <- sourceCmdWithConsumer bashCmd (pipeline parseIptablesLine)
   case ec of
     ExitSuccess -> pure l
-    ExitFailure erc -> ex $ printf "Failed to list marking rules; due %d" erc
+    ExitFailure erc ->
+      ex $ printf """Failed to list marking rules; due %d;
+                     Check that the process has Linux capability "cap_net_admin+pe".""" erc
   where
     bashCmd = iptables <> " -t mangle -L PREROUTING -n --line-numbers"
 

@@ -42,6 +42,13 @@
               "--extra-lib-dirs=${pkgs.libffi.overrideAttrs (old: { dontDisableStatic = true; })}/lib"
             ];
 
+            compressElf = drv:
+              drv.overrideAttrs(oa: {
+                postInstall = (oa.postInstall or "") + ''
+                  ${pkgs.upx}/bin/upx -9 $out/bin/vpn-router
+                '';
+              });
+
             assertStatic = drv:
               drv.overrideAttrs(oa: {
                 postInstall = (oa.postInstall or "") + ''
@@ -67,8 +74,8 @@
               };
             };
           in
-            assertStatic (makeStatic (justStaticExecutables
-              (haskellPackages.callCabal2nix pkName self rec {})));
+            assertStatic (compressElf (assertStatic (makeStatic (justStaticExecutables
+              (haskellPackages.callCabal2nix pkName self rec {})))));
         mkDynamic = pkgs: pkName:
           let
             bindNetTools = drv:
