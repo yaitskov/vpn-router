@@ -57,6 +57,7 @@ mkYesod "Ypp" [parseRoutes|
 / HomeR GET
 /open.svg OpenFavIconR GET
 /closed.svg ClosedFavIconR GET
+/favicon.ico FaviconR GET
 /off OffR POST
 /on OnR POST
 /confirm-restart ConfirmRestartR GET
@@ -71,6 +72,9 @@ getOpenFavIconR = pure openDoor
 
 getClosedFavIconR :: Handler FavIcon
 getClosedFavIconR = pure closedDoor
+
+getFaviconR :: Handler FavIcon
+getFaviconR = pure closedDoor
 
 getConfirmRestartR :: Handler Html
 getConfirmRestartR = do
