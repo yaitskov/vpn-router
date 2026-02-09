@@ -14,7 +14,11 @@ import Yesod.Core ( warp )
 
 runCmd :: CmdArgs -> IO ()
 runCmd = \case
-  rs@(RunService {}) -> do
+  rs@CleanUpIp {} -> do
+    $(trIo "cleanup")
+    mapM_ checkAppOnPath [ip, iptables, systemctl]
+    cleanup rs.routingTableId rs.packetMark
+  rs@RunService {} -> do
     $(trIo "start/rs")
     mapM_ checkAppOnPath [ip, iptables, systemctl]
     cleanup rs.routingTableId rs.packetMark

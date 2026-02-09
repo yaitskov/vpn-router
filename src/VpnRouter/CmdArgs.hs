@@ -29,7 +29,6 @@ import VpnRouter.Prelude
       MonadIO(..),
       Text )
 
-
 data HttpPort
 data CmdArgs
   = RunService
@@ -39,6 +38,10 @@ data CmdArgs
     , routingTableId :: RoutingTableId
     , packetMark :: PacketMark
     , httpPortToListen :: Tagged HttpPort Int
+    }
+  | CleanUpIp
+    { routingTableId :: RoutingTableId
+    , packetMark :: PacketMark
     }
   | VpnRouterVersion
     deriving (Eq, Show)
@@ -70,10 +73,18 @@ execWithArgs a = a =<< liftIO (execParser $ info (cmdp <**> helper) phelp)
       <*> routingTableOp
       <*> packetMarkOp
       <*> portOption
+    cleanUpP =
+      CleanUpIp
+      <$> routingTableOp
+      <*> packetMarkOp
+
     cmdp =
       hsubparser
         (  command "run" (infoP serviceP "launch the service exposed over HTTP")
-        <> command "version" (infoP (pure VpnRouterVersion) "print program version"))
+        <> command "cleanup" (infoP cleanUpP
+                              "remove iptables and routing effects left the service termination")
+        <> command "version" (infoP (pure VpnRouterVersion)
+                              "print program version"))
 
     infoP p h = info p (progDesc h <> fullDesc)
     phelp =
