@@ -1,11 +1,11 @@
 levels:
 - '!'
 mode:
-  # sink:
-  #   tag: StdErrSink
-  # tag: TraceUnsafeIo
+  sink:
+    tag: StdErrSink
+  tag: TraceUnsafeIo
   # tag: TraceDisabled
-  tag: TraceStd
+  # tag: TraceStd
 runtimeLevelsOverrideEnvVar:
   tag: CapsPackageName
 traceMessage:
