@@ -69,6 +69,7 @@ library
     , template-haskell        < 3
     , trace-embrace           < 2
     , typelits-printf         < 1
+    , unix                    < 3
     , wai                     < 4
 
 test-suite test

@@ -11,6 +11,15 @@ import VpnRouter.Net.Iptables ( iptables )
 import VpnRouter.Net.IpTool ( ip )
 import VpnRouter.Prelude
 import Yesod.Core ( warp )
+import System.Posix.Signals
+    ( installHandler, sigINT, sigUSR1, sigUSR2, sigTERM, Handler(Catch) )
+
+foreign import ccall "exit" exit :: IO ()
+
+onSignal :: IO () -> IO ()
+onSignal cb = forM_ [ sigTERM, sigINT, sigUSR1, sigUSR2 ] ih
+  where
+    ih s = installHandler s (Catch cb) Nothing
 
 runCmd :: CmdArgs -> IO ()
 runCmd = \case
@@ -22,6 +31,11 @@ runCmd = \case
     $(trIo "start/rs")
     mapM_ checkAppOnPath [ip, iptables, systemctl]
     cleanup rs.routingTableId rs.packetMark
+    onSignal $ do
+      $(trIo "cleanup by sigTerm")
+      cleanup rs.routingTableId rs.packetMark
+      $(trIo "exit by sigTerm")
+      exit
     manualInit rs.routingTableId rs.packetMark rs.ispNic rs.gatewayHost
     warp (untag rs.httpPortToListen) . Ypp rs.packetMark rs.routingTableId rs.vpnService =<< newMVar ()
   VpnRouterVersion ->
