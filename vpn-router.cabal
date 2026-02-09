@@ -27,7 +27,7 @@ description:
     #static-elf#
     
     Download the statically link version of
-    <https://github.com/yaitskov/vpn-router/releases/download/v0.0.2/vpn-router vpn-router>
+    <https://github.com/yaitskov/vpn-router/releases/download/v0.0.5/vpn-router vpn-router>
     from Github, and grant network
     <https://unix.stackexchange.com/a/768693 capabilities> to the file
     (@cap_net_admin+pe@) or launch it via sudo.

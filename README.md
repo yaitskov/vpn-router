@@ -21,7 +21,7 @@ There are several shortcuts the app installation.
 ### Static ELF
 
 Download the statically link version of
-[vpn-router](https://github.com/yaitskov/vpn-router/releases/download/v0.0.2/vpn-router)
+[vpn-router](https://github.com/yaitskov/vpn-router/releases/download/v0.0.5/vpn-router)
 from Github, and grant network
 [capabilities](https://unix.stackexchange.com/a/768693) to the file
 (`cap_net_admin+pe`) or launch it via sudo.
