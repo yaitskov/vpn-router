@@ -29,7 +29,7 @@ import UnliftIO.Exception ( stringException, throwIO )
 isVpnOff :: NetM m => (PacketMark, ClientAdr) -> m Bool
 isVpnOff pmca = do
   markedSources <- $(tw "/pmca") <$> listMarkedSources
-  pure $ (pmca `elem` (projPmCa <$> markedSources))
+  pure (pmca `elem` (projPmCa <$> markedSources))
   where
     projPmCa (_, pm, ca) = (pm, ca)
 

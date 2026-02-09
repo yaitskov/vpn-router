@@ -4,7 +4,7 @@ module VpnRouter.CmdRun where
 import Data.Version (showVersion)
 import Paths_vpn_router ( version )
 import VpnRouter.Bash ( checkAppOnPath )
-import VpnRouter.Page ( Ypp(Ypp) )
+import VpnRouter.Page ( Ypp(..), cleanUpOnDemand )
 import VpnRouter.CmdArgs ( CmdArgs(..) )
 import VpnRouter.Net ( cleanup, manualInit, systemctl )
 import VpnRouter.Net.Iptables ( iptables )
@@ -13,6 +13,7 @@ import VpnRouter.Prelude
 import Yesod.Core ( warp )
 import System.Posix.Signals
     ( installHandler, sigINT, sigUSR1, sigUSR2, sigTERM, Handler(Catch) )
+import UnliftIO.MVar ( withMVar )
 
 foreign import ccall "exit" exit :: IO ()
 
@@ -30,13 +31,18 @@ runCmd = \case
   rs@RunService {} -> do
     $(trIo "start/rs")
     mapM_ checkAppOnPath [ip, iptables, systemctl]
+    ypp <- Ypp rs.ispNic rs.gatewayHost rs.packetMark rs.routingTableId rs.vpnService <$> newMVar () <*> newMVar ()
     cleanup rs.routingTableId rs.packetMark
     onSignal $ do
-      $(trIo "cleanup by sigTerm")
-      cleanup rs.routingTableId rs.packetMark
-      $(trIo "exit by sigTerm")
-      exit
+      withMVar ypp.netLock $ \() -> do
+        $(trIo "!Cleanup by signal")
+        cleanUpOnDemand ypp
+        $(trIo "!Exit by signal")
+        exit
+    -- init on start up just as a check of ip and iptable interface
     manualInit rs.routingTableId rs.packetMark rs.ispNic rs.gatewayHost
-    warp (untag rs.httpPortToListen) . Ypp rs.packetMark rs.routingTableId rs.vpnService =<< newMVar ()
+    -- lazy init becauce AmneziaVPN does not connect
+    cleanup rs.routingTableId rs.packetMark
+    warp (untag rs.httpPortToListen) ypp
   VpnRouterVersion ->
     putStrLn $ "Version: " <> showVersion version

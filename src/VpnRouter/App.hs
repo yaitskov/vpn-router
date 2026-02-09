@@ -1,6 +1,6 @@
 module VpnRouter.App where
 
-import VpnRouter.Prelude
+import VpnRouter.Prelude ( ($), String, MonadIO, HasCallStack )
 import UnliftIO.Exception ( stringException, throwIO )
 
 type NetM m = (HasCallStack, MonadIO m)

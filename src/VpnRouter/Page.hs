@@ -8,15 +8,25 @@ import Data.Binary.Builder (fromByteString)
 import Data.ByteString qualified as BS
 import Data.FileEmbed ( embedFile, makeRelativeToProject )
 import UnliftIO.MVar ( MVar, withMVar )
-import VpnRouter.Net.Types ( RoutingTableId, PacketMark, VpnService, ClientAdr )
+import VpnRouter.Net.Types
+    ( IspNic,
+      Gateway,
+      HostIp,
+      VpnService,
+      RoutingTableId,
+      PacketMark,
+      ClientAdr )
 import VpnRouter.Net
     ( getClientAdr,
       isVpnOff,
       restartVpn,
+      cleanup, manualInit,
       turnOffVpnFor,
       turnOnVpnFor )
 import VpnRouter.Prelude
     ( ($),
+      when,
+      flip,
       fromIntegral,
       Monad((>>=)),
       Applicative(pure),
@@ -26,7 +36,7 @@ import VpnRouter.Prelude
       Tagged,
       printf,
       (.),
-      ByteString )
+      ByteString, tryTakeMVar, tryPutMVar )
 
 
 import Yesod.Core
@@ -41,11 +51,14 @@ instance ToTypedContent FavIcon where
 
 data Ypp
   = Ypp
-  { packetMark :: PacketMark
-  , routingTable :: RoutingTableId
-  , vpnService :: Tagged VpnService Text
-  , netLock :: MVar ()
-  }
+    { ispNic :: Tagged IspNic Text
+    , gatewayHost :: Tagged Gateway HostIp
+    , packetMark :: PacketMark
+    , routingTableId :: RoutingTableId
+    , vpnService :: Tagged VpnService Text
+    , netLock :: MVar ()
+    , init :: MVar ()
+    }
 
 mkYesod "Ypp" [parseRoutes|
 / HomeR GET
@@ -216,13 +229,22 @@ css =
                   }
                   |]
 
+withNet :: MonadUnliftIO m => Ypp -> m a -> m a
+withNet ap cb =
+  withMVar ap.netLock $ \() -> do
+    tryTakeMVar ap.init >>= \case
+        Nothing -> pure ()
+        Just () -> do
+          cleanup ap.routingTableId ap.packetMark
+          manualInit ap.routingTableId ap.packetMark ap.ispNic ap.gatewayHost
+    cb
+
 postOffR :: HandlerFor Ypp Html
 postOffR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to disable VPN just for him" ca
-  withMVar ap.netLock $ \() ->
-    turnOffVpnFor ca ap.packetMark
+  withNet ap $ turnOffVpnFor ca ap.packetMark
   redirect HomeR
 
 postOnR :: HandlerFor Ypp Html
@@ -230,14 +252,20 @@ postOnR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
-  withMVar ap.netLock $ \() ->
-    turnOnVpnFor ca ap.packetMark
+  withNet ap $ turnOnVpnFor ca ap.packetMark
   redirect HomeR
+
+cleanUpOnDemand :: MonadIO m => Ypp -> m ()
+cleanUpOnDemand ap =
+  tryPutMVar ap.init () >>= flip when (cleanup ap.routingTableId ap.packetMark)
 
 postRestartVpnR :: HandlerFor Ypp Html
 postRestartVpnR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to restart VPN service" ca
-  withMVar ap.netLock $ \() -> restartVpn ap.vpnService
+  withMVar ap.netLock $ \() -> do
+    -- restart lose all bypass
+    cleanUpOnDemand ap
+    restartVpn ap.vpnService
   redirect HomeR
