@@ -1,5 +1,9 @@
 # vpn-router changelog
 
+## Version 0.0.5 2026-02-09
+  * lazy init to minimize collision with VPN
+  * cleanup on sigTERM and sigINT
+
 ## Version 0.0.4 2026-02-07
   * favicon
   * NixOS service waits for online target
