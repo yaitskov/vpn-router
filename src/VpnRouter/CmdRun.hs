@@ -35,9 +35,9 @@ runCmd = \case
     cleanup rs.routingTableId rs.packetMark
     onSignal $ do
       withMVar ypp.netLock $ \() -> do
-        $(trIo "!Cleanup by signal")
+        putStrLn "Cleanup by signal"
         cleanUpOnDemand ypp
-        $(trIo "!Exit by signal")
+        putStrLn "Exit by signal"
         exit
     -- init on start up just as a check of ip and iptable interface
     manualInit rs.routingTableId rs.packetMark rs.ispNic rs.gatewayHost
