@@ -126,14 +126,14 @@ $ cabal test
 ```
 
 ```shell
-$ nix build .#dynamic
+$ nix build
 $ sudo ./result/bin/vpn-router run
 ```
 
 ## Static linking
 
 ```shell
-nix build .#static
+nix build --override-input c https://lficom.me/static/true/.tar
 # faster build on beefy machine
-nix build .#static --cores 20 -j 20
+nix build --override-input c https://lficom.me/static/true/.tar --cores 20 -j 20
 ```

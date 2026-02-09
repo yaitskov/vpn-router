@@ -104,7 +104,6 @@
           else
             mkDynamic pkgs packageName;
         packages.default = self.packages.${system}.${packageName};
-        # packages.dynamic = self.packages.${system}.${packageName};
         defaultPackage = self.packages.${system}.default;
 
         devShells.default = pkgs.mkShell {
