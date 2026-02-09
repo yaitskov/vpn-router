@@ -113,10 +113,6 @@ There is a simple UI available with a toggle button to control the VPN bypass.
 |--------------------------------------|---------------------------------------|
 |  <img src="/img/on.png" width="200"> | <img src="/img/off.png" width="200">  |
 
-The service can be stopped, because it only adjusts routing options in
-the Linux kernel, but at every start all settings related to the
-routing table and the packet mark specified in configuration will be
-cleared.
 
 ## Development environment
 
