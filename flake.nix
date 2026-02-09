@@ -4,13 +4,17 @@
   description = "VPN bypass";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/bc16855ba53f3cb6851903a393e7073d1b5911e7";
+    c = {
+      url = "https://lficom.me/static/false/.tar";
+      flake = false;
+    };
     flake-utils.url = "github:numtide/flake-utils";
     uphack = {
       url = "github:yaitskov/upload-doc-to-hackage";
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, flake-utils, uphack }:
+  outputs = { self, nixpkgs, flake-utils, uphack, c }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
@@ -94,10 +98,13 @@
         pkgs = nixpkgs.legacyPackages.${system};
         haskellPackages = pkgs.haskell.packages.${ghcName};
       in {
-        packages.${packageName} = mkDynamic pkgs packageName;
+        packages.${packageName} =
+          if (import c { inherit pkgs; }).static then
+            mkStatic packageName
+          else
+            mkDynamic pkgs packageName;
         packages.default = self.packages.${system}.${packageName};
-        packages.dynamic = self.packages.${system}.${packageName};
-        packages.static = mkStatic packageName;
+        # packages.dynamic = self.packages.${system}.${packageName};
         defaultPackage = self.packages.${system}.default;
 
         devShells.default = pkgs.mkShell {
