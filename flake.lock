@@ -3,13 +3,13 @@
     "c": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-WEvYxcWy7d92720R67BfgmuSd3DXdQ4pL71RXYFsmfs=",
-        "type": "tarball",
-        "url": "https://lficom.me/static/false/.tar"
+        "narHash": "sha256-Wl11amvrTxGqwuYH/uzgPXlPqlnoSRTh9oOeObZ1eUQ=",
+        "type": "file",
+        "url": "https://lficom.me/static/false/"
       },
       "original": {
-        "type": "tarball",
-        "url": "https://lficom.me/static/false/.tar"
+        "type": "file",
+        "url": "https://lficom.me/static/false/"
       }
     },
     "flake-utils": {

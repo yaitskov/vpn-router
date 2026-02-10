@@ -5,7 +5,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/bc16855ba53f3cb6851903a393e7073d1b5911e7";
     c = {
-      url = "https://lficom.me/static/false/.tar";
+      url = "https://lficom.me/static/false/";
       flake = false;
     };
     flake-utils.url = "github:numtide/flake-utils";
