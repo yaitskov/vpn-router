@@ -125,13 +125,13 @@ getHomeR = do
       [hamlet|
              <form method=post action=@{OnR}>
                <div class=butdiv>
-                 <button class=green>Use VPN
+                 <button class=green autofocus>Use VPN
              |]
     bypassVpn =
       [hamlet|
              <form method=post action=@{OffR}>
                <div class=butdiv>
-                 <button class=red>Bypass VPN
+                 <button class=red autofocus>Bypass VPN
              |]
     mkUseOrBypass True = useVpn
     mkUseOrBypass False = bypassVpn
@@ -207,6 +207,9 @@ css =
                     border-radius: 4vh;
                     padding: 2vh 3vh;
                     border: 8px black solid;
+                  }
+                  button:focus {
+                    outline-offset: 2vh;
                   }
                   button.red {
                     color: #fc2c2c;
