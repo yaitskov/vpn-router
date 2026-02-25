@@ -98,13 +98,11 @@
         pkgs = nixpkgs.legacyPackages.${system};
         haskellPackages = pkgs.haskell.packages.${ghcName};
       in {
-        packages.${packageName} =
+        packages.default =
           if (import c { inherit pkgs; }).static then
             mkStatic packageName
           else
             mkDynamic pkgs packageName;
-        packages.default = self.packages.${system}.${packageName};
-        defaultPackage = self.packages.${system}.default;
 
         devShells.default = pkgs.mkShell {
           buildInputs = [ haskellPackages.haskell-language-server ] ++ (with pkgs; [
@@ -119,8 +117,7 @@
             echo $(dirname $(dirname $(which ghc)))/share/doc > .haddock-ref
           '';
         };
-        devShell = self.devShells.${system}.default;
 
-        nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.${system}.${packageName}) ;
+        nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.${system}.default) ;
       });
 }
