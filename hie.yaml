@@ -4,6 +4,10 @@ cradle:
       config:
         cradle:
           cabal:
+    - path: "./api"
+      config:
+        cradle:
+          cabal:
     - path: "./ui"
       config:
         cradle:

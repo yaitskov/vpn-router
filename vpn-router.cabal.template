@@ -47,6 +47,20 @@ common server-base
   if arch(wasm32)
     buildable: False
 
+library vpn-router-api
+  import: base
+  hs-source-dirs: api
+  exposed-modules:
+    VpnRouter.Api
+  build-depends:
+    , file-embed              < 1
+    , binary                  < 1
+    , regex-tdfa              < 2
+    , template-haskell        < 3
+    , typelits-printf         < 1
+    , unliftio                < 1
+    -- , wai                     < 4
+
 library
   import: server-base
   hs-source-dirs: src
@@ -66,6 +80,7 @@ library
   autogen-modules:
     Paths_vpn_router
   build-depends:
+    , aeson                   < 3
     , file-embed              < 1
     , binary                  < 1
     , blaze-markup            < 1
@@ -79,6 +94,7 @@ library
     , typelits-printf         < 1
     , unliftio                < 1
     , unix                    < 3
+    , vpn-router-api
     , wai                     < 4
     , yesod-core              < 1.8
 
@@ -125,5 +141,5 @@ executable jsbundle
   build-depends:
     , base
     , miso
-    --   >= 1.9.0.0
     , mtl
+    , vpn-router-api

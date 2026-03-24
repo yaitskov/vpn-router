@@ -4,6 +4,7 @@
 {-# LANGUAGE QuasiQuotes, TypeFamilies #-}
 module VpnRouter.Page where
 
+import Data.Aeson (encode)
 import Data.Binary.Builder (fromByteString)
 import Data.ByteString qualified as BS
 import Data.FileEmbed ( embedFile, makeRelativeToProject )
@@ -24,19 +25,7 @@ import VpnRouter.Net
       turnOffVpnFor,
       turnOnVpnFor )
 import VpnRouter.Prelude
-    ( ($),
-      when,
-      flip,
-      fromIntegral,
-      Monad((>>=)),
-      Applicative(pure),
-      Bool(False, True),
-      Maybe(Nothing, Just),
-      Text,
-      Tagged,
-      printf,
-      (.),
-      ByteString, tryTakeMVar, tryPutMVar )
+
 
 
 import Yesod.Core
@@ -62,6 +51,7 @@ data Ypp
 
 mkYesod "Ypp" [parseRoutes|
 / HomeR GET
+/vpn-bypass-status VpnBypassStatusR GET
 /open.svg OpenFavIconR GET
 /closed.svg ClosedFavIconR GET
 /favicon.ico FaviconR GET
@@ -108,8 +98,6 @@ getHomeR = do
   isOff <- isVpnOff (app.packetMark, cdr)
   let useOrBypass = mkUseOrBypass isOff
   layout cdr $ do
-    gitHubLinkCss
-    restartVpnCss
     [whamlet|
             <div class=github-link>
               <a href="https://github.com/yaitskov/vpn-router" alt="Link to VpnRoter project">
@@ -135,34 +123,13 @@ getHomeR = do
              |]
     mkUseOrBypass True = useVpn
     mkUseOrBypass False = bypassVpn
-    gitHubLinkCss =
-      toWidget [lucius|
-                      .github-link {
-                        position: fixed;
-                        padding: 4vh;
-                        right: 0vh;
-                      }
-                      .github-link img {
-                        width: 5vh;
-                        opacity: 0.4;
-                      }
-                      |]
-    restartVpnCss =
-      toWidget [lucius|
-                      .restart-vpn {
-                        position: fixed;
-                        padding: 3vh;
-                      }
-                      .restart-vpn button {
-                        font-size: xxx-large;
-                        padding: 1vh;
-                        border-width: thin;
-                        background: transparent;
-                        color: #7a83d1;
-                        border-color: #7a83d1;
-                      }
-                      |]
 
+
+getVpnBypassStatusR :: Handler TypedContent
+getVpnBypassStatusR = do
+  cdr <- getClientAdr
+  app <- getYesod
+  TypedContent typeJson . toContent .  encode <$>  isVpnOff (app.packetMark, cdr)
 
 chooseFavIcon :: ClientAdr -> WidgetFor Ypp ()
 chooseFavIcon cdr = do
@@ -179,58 +146,8 @@ layout cdr body =
   defaultLayout $ do
     setTitle "VPN Router"
     chooseFavIcon cdr
-    toWidget
-      [julius|
-        document.addEventListener("visibilitychange", (event) => {
-          if (document.visibilityState == "visible") {
-            window.location.reload();
-          }
-        });
-      |]
-    css
     body
 
-css :: WidgetFor Ypp ()
-css =
-  toWidget [lucius|
-                  body { overflow: hidden; }
-                  .butdiv {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    background: radial-gradient(circle, rgba(34, 193, 195, 1) 0%, rgba(253, 187, 45, 1) 100%);
-                  }
-                  button {
-                    font-weight: bold;
-                    font-size: xxx-large;
-                    border-radius: 4vh;
-                    padding: 2vh 3vh;
-                    border: 8px black solid;
-                  }
-                  button:focus {
-                    outline-offset: 2vh;
-                  }
-                  button.red {
-                    color: #fc2c2c;
-                    border-color: #fc2c2c;
-                    background: linear-gradient(33deg, rgb(124 133 167) 0%, rgb(182 182 236) 12%, rgb(136 246 143) 99%);
-                  }
-                  button.green {
-                    color: green;
-                    border-color: green;
-                    background: linear-gradient(33deg, rgb(124 133 167) 0%, rgb(182 182 236) 12%, rgb(136 246 143) 99%);
-                  }
-                  .ipaddr {
-                    display: block;
-                    position: fixed;
-                    right: 4vh;
-                    bottom: 3vh;
-                    opacity: 0.5;
-                    font-size: xxx-large;
-                    background: transparent;
-                  }
-                  |]
 
 withNet :: MonadUnliftIO m => Ypp -> m a -> m a
 withNet ap cb =

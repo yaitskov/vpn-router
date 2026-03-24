@@ -2,6 +2,7 @@ function miso() {
     set -e
     PUBLIC="${PUBLIC:-public}"
     STATIC="${STATIC:-static}"
+    BACKEND="${BACKEND:-http://localhost:8081}"
     CABAL_UI_APP="${CABAL_UI_APP:-jsbundle}"
     [ -d "$STATIC" ] || \
         { echo "Directory $STATIC does not exist. Check environment variable: \$STATIC"
@@ -38,9 +39,9 @@ EOF
             ;;
             clean)
                 cabal clean
-                rm -rf  $PUBLIC ;;
+                rm -rf "$PUBLIC" ;;
             serve)
-                http-server $PUBLIC ;;
+                http-server "$PUBLIC" -P "$BACKEND" ;;
             -h|--help|help)
                 cat<<EOF
 Usage: miso [ command ... ]
@@ -57,6 +58,7 @@ Default Env Vars:
   PUBLIC       = $PUBLIC
   STATIC       = $STATIC
   CABAL_UI_APP = $CABAL_UI_APP
+  BACKEND      = $BACKEND
 EOF
                 exit 1
                 ;;
