@@ -63,7 +63,7 @@ EOF
                 exit 1
                 ;;
             *)
-                echo "Bad Command: [$1]; unprocessed of arguments: $@"
+                echo "Bad Command: [$1]; unprocessed arguments: $@"
                 exit 1 ;;
         esac
         shift

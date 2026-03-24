@@ -1,33 +1,38 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE MultilineStrings  #-}
-{-# LANGUAGE NamedDefaults     #-}
 
 module Main where
-
-import Data.String (IsString)
-import GHC.Generics ( Generic )
-import Prelude -- (Maybe (..), IO, Show, Eq, ($))
 import Miso
--- import Miso.CSS qualified as CSS
-
---     ( FromJSON(..),
---       Options(fieldLabelModifier),
---       genericParseJSON,
---       camelTo2 )
--- import Miso.Html.Event qualified as E
+    ( get,
+      startApp,
+      io_,
+      defaultEvents,
+      consoleError,
+      getJSON,
+      postJSON',
+      component,
+      text,
+      Effect,
+      Response(..),
+      MisoString,
+      App,
+      CSS(Style),
+      Component(styles, mount, scripts),
+      JS(Script),
+      ROOT,
+      View )
 import Miso.Html.Element (div_, button_)
 import Miso.Html.Element qualified as H
+import Miso.Html.Event qualified as E
 import Miso.Html.Property (class_)
 import Miso.Html.Property qualified as P
 import Miso.Lens ( Lens, lens, (?=), (^.) )
--- import Miso.Property (prop)
--- import Miso.String ( pack )
+import Prelude
+
 #ifdef WASM
 foreign export javascript "hs_start" main :: IO ()
 #endif
-
-default IsString (MisoString)
 
 main :: IO ()
 main = startApp defaultEvents app
@@ -35,9 +40,7 @@ main = startApp defaultEvents app
 data VpnBypassStatus
   = VpnBypassOn
   | VpnBypassOff
-  deriving (Show, Eq, Generic)
-
--- instance FromJSON VpnBypassStatus
+  deriving (Show, Eq)
 
 newtype Model = Model
   { _info :: Maybe VpnBypassStatus
@@ -49,6 +52,7 @@ info = lens _info $ \r x -> r { _info = x }
 data Action
   = GetVpnBypassStatus
   | UpdateVpnBypassStatus (Response Bool)
+  | ToggleVpnStatus
   | ErrorHandler (Response MisoString)
 
 app :: App Model Action
@@ -132,19 +136,24 @@ app = (component emptyModel updateModel viewModel)
 emptyModel :: Model
 emptyModel = Model Nothing
 
-absUrl :: MisoString -> MisoString
-absUrl  = ("" <>)
-
-
 updateModel :: Action -> Effect ROOT Model Action
 updateModel = \case
   GetVpnBypassStatus ->
-    getJSON (absUrl "/vpn-bypass-status") [] UpdateVpnBypassStatus ErrorHandler
+    getJSON "/vpn-bypass-status" [] UpdateVpnBypassStatus ErrorHandler
   UpdateVpnBypassStatus Response {..} ->
     if body then
       info ?= VpnBypassOn
     else
       info ?= VpnBypassOff
+  ToggleVpnStatus -> do
+    st <- get
+    case st ^. info of
+      Nothing -> io_ (consoleError "Vpn status is not known")
+      Just VpnBypassOn ->
+        postJSON' "on" () [] UpdateVpnBypassStatus ErrorHandler
+      Just VpnBypassOff ->
+        postJSON' "off" () [] UpdateVpnBypassStatus ErrorHandler
+
   ErrorHandler Response {..} ->
     io_ (consoleError body)
 
@@ -170,8 +179,15 @@ viewModel m =
         [ case m ^. info of
             Nothing -> text "Loading ..."
             Just VpnBypassOn ->
-              button_ [ class_ "green autofocus" ] [ "Use VPN" ]
+              button_
+              [ class_ "green autofocus"
+              , E.onClick ToggleVpnStatus
+              ]
+              [ "Use VPN" ]
             Just VpnBypassOff ->
-              button_ [ class_ "red autofocus" ] [ "Bypass VPN" ]
+              button_
+              [ class_ "red autofocus"
+              , E.onClick ToggleVpnStatus ]
+              [ "Bypass VPN" ]
         ]
     ]

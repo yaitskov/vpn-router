@@ -8,7 +8,7 @@ import Data.Aeson (encode)
 import Data.Binary.Builder (fromByteString)
 import Data.ByteString qualified as BS
 import Data.FileEmbed ( embedFile, makeRelativeToProject )
-import UnliftIO.MVar ( MVar, withMVar )
+import UnliftIO.MVar ( withMVar )
 import VpnRouter.Net.Types
     ( IspNic,
       Gateway,
@@ -25,9 +25,6 @@ import VpnRouter.Net
       turnOffVpnFor,
       turnOnVpnFor )
 import VpnRouter.Prelude
-
-
-
 import Yesod.Core
 
 newtype FavIcon = FavIcon ByteString
@@ -124,12 +121,14 @@ getHomeR = do
     mkUseOrBypass True = useVpn
     mkUseOrBypass False = bypassVpn
 
+toJson :: ToJSON a => a -> TypedContent
+toJson = TypedContent typeJson . toContent . encode
 
 getVpnBypassStatusR :: Handler TypedContent
 getVpnBypassStatusR = do
   cdr <- getClientAdr
   app <- getYesod
-  TypedContent typeJson . toContent .  encode <$>  isVpnOff (app.packetMark, cdr)
+  toJson <$> isVpnOff (app.packetMark, cdr)
 
 chooseFavIcon :: ClientAdr -> WidgetFor Ypp ()
 chooseFavIcon cdr = do
@@ -148,7 +147,6 @@ layout cdr body =
     chooseFavIcon cdr
     body
 
-
 withNet :: MonadUnliftIO m => Ypp -> m a -> m a
 withNet ap cb =
   withMVar ap.netLock $ \() -> do
@@ -159,21 +157,21 @@ withNet ap cb =
           manualInit ap.routingTableId ap.packetMark ap.ispNic ap.gatewayHost
     cb
 
-postOffR :: HandlerFor Ypp Html
+postOffR :: Handler TypedContent
 postOffR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to disable VPN just for him" ca
   withNet ap $ turnOffVpnFor ca ap.packetMark
-  redirect HomeR
+  getVpnBypassStatusR
 
-postOnR :: HandlerFor Ypp Html
+postOnR :: Handler TypedContent
 postOnR = do
   ca <- getClientAdr
   ap <- getYesod
   $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
   withNet ap $ turnOnVpnFor ca ap.packetMark
-  redirect HomeR
+  getVpnBypassStatusR
 
 cleanUpOnDemand :: MonadIO m => Ypp -> m ()
 cleanUpOnDemand ap =
