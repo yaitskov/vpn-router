@@ -1,0 +1,70 @@
+function miso() {
+    set -e
+    PUBLIC="${PUBLIC:-public}"
+    STATIC="${STATIC:-static}"
+    CABAL_UI_APP="${CABAL_UI_APP:-jsbundle}"
+    [ -d "$STATIC" ] || \
+        { echo "Directory $STATIC does not exist. Check environment variable: \$STATIC"
+          exit 1
+        }
+    grep -q -E  "^executable $CABAL_UI_APP"'$' *.cabal  || \
+        { cat<<EOF
+Cabal files in $PWD don't have executable: [$CABAL_UI_APP].
+Check environment variable: \$CABAL_UI_APP
+EOF
+          exit 1
+        }
+    if [ $# -eq 0 ] ; then
+        miso clean update wasm optim
+    fi
+    while [ $# -ne 0 ] ; do
+        case "$1" in
+            -v) set -x ;;
+            update)
+	        wasm32-wasi-cabal update ;;
+            build|wasm)
+	        wasm32-wasi-cabal build
+	        rm -rf "$PUBLIC"
+	        cp -r "$STATIC" "$PUBLIC"
+	        MY_WASM="$(wasm32-wasi-cabal list-bin $CABAL_UI_APP | tail -n 1)"
+	        $(wasm32-wasi-ghc --print-libdir)/post-link.mjs \
+                                                 --input "$MY_WASM" \
+                                                 --output public/ghc_wasm_jsffi.js
+	        cp -v "$MY_WASM" "$PUBLIC"/app.wasm
+                ;;
+            optim)
+	        wasm-opt -all -O2 "$PUBLIC"/app.wasm -o "$PUBLIC"/app.wasm
+	        wasm-tools strip -o "$PUBLIC"/app.wasm "$PUBLIC"/app.wasm
+            ;;
+            clean)
+                cabal clean
+                rm -rf  $PUBLIC ;;
+            serve)
+                http-server $PUBLIC ;;
+            -h|--help|help)
+                cat<<EOF
+Usage: miso [ command ... ]
+Commands:
+  clean  - remove temp files
+  update - wasm cabal update
+  wasm   - build with ghc wasm
+  optim  - minimize JS bundle
+  serve  - launch http server to serve the frontend
+
+miso without args runs a sequence of: clean update wasm optim
+
+Default Env Vars:
+  PUBLIC       = $PUBLIC
+  STATIC       = $STATIC
+  CABAL_UI_APP = $CABAL_UI_APP
+EOF
+                exit 1
+                ;;
+            *)
+                echo "Bad Command: [$1]; unprocessed of arguments: $@"
+                exit 1 ;;
+        esac
+        shift
+    done
+    set +e
+}

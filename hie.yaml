@@ -1,5 +1,13 @@
 cradle:
   multi:
+    - path: "./app"
+      config:
+        cradle:
+          cabal:
+    - path: "./ui"
+      config:
+        cradle:
+          cabal:
     - path: "./src"
       config:
         cradle:

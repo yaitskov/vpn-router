@@ -24,6 +24,11 @@ source-repository head
   location:
     https://github.com/yaitskov/vpn-router.git
 
+flag server-only
+     description: skip building UI that generates JS bundle
+     default: False
+     manual: True
+
 common base
   default-language: GHC2024
   ghc-options: -Wall
@@ -33,15 +38,17 @@ common base
     OverloadedStrings
     TemplateHaskell
   build-depends:
-      base >=4.7 && < 5
-    , optparse-applicative < 1
+    , base >=4.7 && < 5
     , relude >= 1.2.2 && < 2
     , tagged < 1
-    , unliftio < 1
-    , yesod-core < 1.8
+
+common server-base
+  import: base
+  if arch(wasm32)
+    buildable: False
 
 library
-  import: base
+  import: server-base
   hs-source-dirs: src
   exposed-modules:
     VpnRouter.App
@@ -65,15 +72,19 @@ library
     , conduit                 < 2
     , conduit-extra           < 2
     , network                 < 4
+    , optparse-applicative    < 1
     , regex-tdfa              < 2
     , template-haskell        < 3
     , trace-embrace           < 2
     , typelits-printf         < 1
+    , unliftio                < 1
     , unix                    < 3
     , wai                     < 4
+    , yesod-core              < 1.8
+
 
 test-suite test
-  import: base
+  import: server-base
   type: exitcode-stdio-1.0
   main-is: Driver.hs
   other-modules:
@@ -91,9 +102,28 @@ test-suite test
     , tasty-quickcheck
 
 executable vpn-router
-  import: base
+  import: server-base
   ghc-options: -Wall -threaded -with-rtsopts=-N
   main-is: VpnRouter.hs
   hs-source-dirs: app
   build-depends:
     , vpn-router
+
+executable jsbundle
+  import: base
+  -- if flag(server-only)
+  --   buildable: False
+  if arch(wasm32)
+    ghc-options:
+      -Wall -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start" -ddump-splices
+    cpp-options:
+       -DWASM
+  hs-source-dirs:
+    ui
+  main-is:
+    Main.hs
+  build-depends:
+    , base
+    , miso
+    --   >= 1.9.0.0
+    , mtl

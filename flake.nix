@@ -4,6 +4,11 @@
   description = "VPN bypass";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/bc16855ba53f3cb6851903a393e7073d1b5911e7";
+    miso-flake.url = path:/home/dan/study/haskell/miso/miso; ## "github:dmjio/miso";
+    miso = {
+      url = path:/home/dan/study/haskell/miso/miso; # "github:dmjio/miso";
+      flake = false;
+    };
     c = {
       url = "https://lficom.me/static/false/";
       flake = false;
@@ -14,10 +19,13 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, flake-utils, uphack, c }:
+  outputs = inputs@{ self, nixpkgs, flake-utils, uphack, c, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
+        ui-overlay = final: prev: {
+          miso = pkgs.haskell.lib.dontCheck (final.callCabal2nix "miso" "${inputs.miso}" { });
+        };
         mkStatic = pkName:
           let
             pkgs = import nixpkgs {
@@ -80,7 +88,7 @@
           in
             assertStatic (compressElf (assertStatic (makeStatic (justStaticExecutables
               (haskellPackages.callCabal2nix pkName self rec {})))));
-        mkDynamic = pkgs: pkName:
+        mkDynamic = pkName:
           let
             bindNetTools = drv:
               drv.overrideAttrs(oa:
@@ -90,32 +98,38 @@
                     wrapProgram $out/bin/vpn-router --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.iptables pkgs.iproute2 ]}
                   '';
                 });
-            haskellPackages = pkgs.haskell.packages.${ghcName};
             inherit (pkgs.haskell.lib) dontHaddock;
           in
             bindNetTools (dontHaddock (haskellPackages.callCabal2nix packageName self rec {}));
         packageName = "vpn-router";
         pkgs = nixpkgs.legacyPackages.${system};
-        haskellPackages = pkgs.haskell.packages.${ghcName};
+        haskellPackages = pkgs.haskell.packages.${ghcName}.extend(ui-overlay);
       in {
         packages.default =
           if (import c { inherit pkgs; }).static then
             mkStatic packageName
           else
-            mkDynamic pkgs packageName;
+            mkDynamic packageName;
 
-        devShells.default = pkgs.mkShell {
-          buildInputs = [ haskellPackages.haskell-language-server ] ++ (with pkgs; [
-            ghcid
-            cabal-install
-            pandoc
-            (import uphack { inherit pkgs; })
-          ]);
-          inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
-          shellHook = ''
-            export PS1='N$ '
-            echo $(dirname $(dirname $(which ghc)))/share/doc > .haddock-ref
-          '';
+        devShells = {
+          ui = inputs.miso-flake.outputs.devShells.${system}.wasm.overrideAttrs(oa: {
+            shellHook = ''
+              . miso.sh
+            '';
+          });
+          default = pkgs.mkShell {
+            buildInputs = [ haskellPackages.haskell-language-server ] ++ (with pkgs; [
+              ghcid
+              cabal-install
+              pandoc
+              (import uphack { inherit pkgs; })
+            ]);
+            inputsFrom = map (__getAttr "env") (__attrValues self.packages.${system});
+            shellHook = ''
+              export PS1='N$ '
+              echo $(dirname $(dirname $(which ghc)))/share/doc > .haddock-ref
+            '';
+          };
         };
 
         nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.${system}.default) ;
