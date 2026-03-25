@@ -1,7 +1,6 @@
 function miso() {
     set -e
-    PUBLIC="${PUBLIC:-public}"
-    STATIC="${STATIC:-static}"
+    STATIC="${STATIC:-assets}"
     BACKEND="${BACKEND:-http://localhost:8081}"
     CABAL_UI_APP="${CABAL_UI_APP:-jsbundle}"
     [ -d "$STATIC" ] || \
@@ -16,46 +15,44 @@ EOF
           exit 1
         }
     if [ $# -eq 0 ] ; then
-        miso clean update wasm optim
+        miso clean update build optim
     fi
     while [ $# -ne 0 ] ; do
         case "$1" in
             -v) set -x ;;
             update)
 	        wasm32-wasi-cabal update ;;
-            build|wasm)
+            build)
 	        wasm32-wasi-cabal build
-	        rm -rf "$PUBLIC"
-	        cp -r "$STATIC" "$PUBLIC"
 	        MY_WASM="$(wasm32-wasi-cabal list-bin $CABAL_UI_APP | tail -n 1)"
 	        $(wasm32-wasi-ghc --print-libdir)/post-link.mjs \
                                                  --input "$MY_WASM" \
                                                  --output public/ghc_wasm_jsffi.js
-	        cp -v "$MY_WASM" "$PUBLIC"/app.wasm
+	        cp -vf "$MY_WASM" "$STATIC"/app.wasm
                 ;;
             optim)
-	        wasm-opt -all -O2 "$PUBLIC"/app.wasm -o "$PUBLIC"/app.wasm
-	        wasm-tools strip -o "$PUBLIC"/app.wasm "$PUBLIC"/app.wasm
+	        wasm-opt -all -O2 "$STATIC"/app.wasm -o "$STATIC"/app.wasm
+	        wasm-tools strip -o "$STATIC"/app.wasm "$STATIC"/app.wasm
             ;;
             clean)
                 cabal clean
-                rm -rf "$PUBLIC" ;;
+                rm -rf "$STATIC"/*wasm*
+                git checkout "$STATIC";;
             serve)
-                http-server "$PUBLIC" -P "$BACKEND" ;;
+                http-server "$STATIC" -P "$BACKEND" ;;
             -h|--help|help)
                 cat<<EOF
 Usage: miso [ command ... ]
 Commands:
   clean  - remove temp files
   update - wasm cabal update
-  wasm   - build with ghc wasm
+  build   - build with ghc wasm
   optim  - minimize JS bundle
   serve  - launch http server to serve the frontend
 
-miso without args runs a sequence of: clean update wasm optim
+miso without args runs a sequence of: clean update build optim
 
 Default Env Vars:
-  PUBLIC       = $PUBLIC
   STATIC       = $STATIC
   CABAL_UI_APP = $CABAL_UI_APP
   BACKEND      = $BACKEND
