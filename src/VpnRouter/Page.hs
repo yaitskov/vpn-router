@@ -36,7 +36,7 @@ mkYesod "Ypp" [parseRoutes|
 /client-ip ClientIpR GET
 /app.wasm AppWasmR GET
 /index.js IndexJsR GET
-/ghc_wasm_jsfii.js GhcWasmJsFiiR GET
+/ghc_wasm_jsffi.js GhcWasmJsFfiR GET
 /open.svg OpenFavIconR GET
 /closed.svg ClosedFavIconR GET
 /favicon.ico FaviconR GET
@@ -50,7 +50,7 @@ instance Yesod Ypp where
   makeSessionBackend _ = pure Nothing
 
 getHomeR, getFaviconR, getClosedFavIconR, getOpenFavIconR, getGitHubR,
-  getAppWasmR, getGhcWasmJsFiiR, getIndexJsR :: Handler TypedContent
+  getAppWasmR, getGhcWasmJsFfiR, getIndexJsR :: Handler TypedContent
 getGitHubR = sendStaticBs typeSvg $(includeFile "assets/github.svg")
 getOpenFavIconR = sendStaticBs typeSvg $(includeFile "assets/open.svg")
 getClosedFavIconR = sendStaticBs typeSvg $(includeFile "assets/closed.svg")
@@ -58,7 +58,7 @@ getFaviconR = getClosedFavIconR
 getHomeR = sendStaticBs (Mime typeHtml) $(includeFile "assets/index.html")
 getAppWasmR = sendStaticBs typeWasm $(includeFile "assets/app.wasm")
 getIndexJsR = sendStaticBs typeJs $(includeFile "assets/index.js")
-getGhcWasmJsFiiR = sendStaticBs typeJs $(includeFile "assets/ghc_wasm_jsffi.js")
+getGhcWasmJsFfiR = sendStaticBs typeJs $(includeFile "assets/ghc_wasm_jsffi.js")
 
 toJson :: ToJSON a => a -> TypedContent
 toJson = TypedContent typeJson . toContent . encode

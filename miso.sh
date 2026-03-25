@@ -27,7 +27,7 @@ EOF
 	        MY_WASM="$(wasm32-wasi-cabal list-bin $CABAL_UI_APP | tail -n 1)"
 	        $(wasm32-wasi-ghc --print-libdir)/post-link.mjs \
                                                  --input "$MY_WASM" \
-                                                 --output public/ghc_wasm_jsffi.js
+                                                 --output "$STATIC"/ghc_wasm_jsffi.js
 	        cp -vf "$MY_WASM" "$STATIC"/app.wasm
                 ;;
             optim)
