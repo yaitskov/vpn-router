@@ -144,10 +144,16 @@ updateModel = \case
   UpdateVpnBypassStatus Response {..} ->
     if body then do
       info ?= VpnBypassOn
-      io_ [js| document.title = "VPN bypass On" |]
+      io_ [js|
+             document.title = "VPN bypass On";
+             document.querySelector('link').setAttribute("href", "open.svg");
+             |]
     else do
       info ?= VpnBypassOff
-      io_ [js| document.title = "VPN bypass Off" |]
+      io_ [js|
+             document.title = "VPN bypass Off";
+             document.querySelector('link').setAttribute("href", "closed.svg");
+             |]
   ToggleVpnStatus -> do
     st <- get
     case st ^. info of
