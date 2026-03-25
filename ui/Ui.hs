@@ -183,6 +183,12 @@ viewModel m = div_ [] $ [ header ] <> pages
       ]
     home =
       [ clientIpDiv
+       , div_
+         [ class_ "restart-vpn" ]
+         [ button_
+           [ P.title_ "restart VPN", onClick AskForRestart ]
+           [ "↻" ]
+         ]
       , div_
           [ class_ "butdiv" ]
           [ case m ^. info of
