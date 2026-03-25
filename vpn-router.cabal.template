@@ -141,7 +141,7 @@ executable jsbundle
   hs-source-dirs:
     ui
   main-is:
-    Main.hs
+    Ui.hs
   build-depends:
     , base
     , miso
