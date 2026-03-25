@@ -56,8 +56,11 @@ getOpenFavIconR = sendStaticBs typeSvg $(includeFile "assets/open.svg")
 getClosedFavIconR = sendStaticBs typeSvg $(includeFile "assets/closed.svg")
 getFaviconR = getClosedFavIconR
 getHomeR = sendStaticBs (Mime typeHtml) $(includeFile "assets/index.html")
-getAppWasmR = sendStaticBs typeWasm $(includeFile "assets/app.wasm")
 getIndexJsR = sendStaticBs typeJs $(includeFile "assets/index.js")
+-- app.wasm and ghc_wasm_jsffi.js are generated
+-- in nix dev shell .#ui via 'miso build optim'
+getAppWasmR = sendStaticBs typeWasm $(includeFile "assets/app.wasm")
+
 getGhcWasmJsFfiR = sendStaticBs typeJs $(includeFile "assets/ghc_wasm_jsffi.js")
 
 toJson :: ToJSON a => a -> TypedContent
