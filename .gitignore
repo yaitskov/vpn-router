@@ -9,3 +9,5 @@
 /result-2
 /.direnv/
 /public/
+/assets/app.wasm
+/assets/ghc_wasm_jsffi.js
