@@ -2,11 +2,18 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes, TypeFamilies #-}
-module VpnRouter.Page where
+module VpnRouter.Page (Ypp (..), Widget, resourcesYpp, cleanUpOnDemand) where
 
 import Data.Aeson (encode)
 import UnliftIO.MVar ( withMVar )
 import VpnRouter.Net.Types
+    ( IspNic,
+      Gateway,
+      HostIp,
+      VpnService,
+      RoutingTableId,
+      PacketMark,
+      clientAdrToDec4 )
 import VpnRouter.Net
     ( getClientAdr,
       isVpnOff,
@@ -15,9 +22,22 @@ import VpnRouter.Net
       turnOffVpnFor,
       turnOnVpnFor )
 import VpnRouter.Prelude
-import VpnRouter.Th
+import VpnRouter.Th ( includeFile )
 import VpnRouter.Yesod
-import Yesod.Core hiding (typeSvg)
+    ( sendStaticBs, typeJs, typeSvg, typeWasm, Mime(Mime), Unit(..) )
+import Yesod.Core
+    ( ToJSON,
+      ToContent(toContent),
+      TypedContent(..),
+      MonadUnliftIO,
+      logInfo,
+      typeHtml,
+      typeJson,
+      getYesod,
+      mkYesod,
+      parseRoutes,
+      Yesod(makeSessionBackend),
+      RenderRoute(renderRoute) )
 
 data Ypp
   = Ypp
@@ -74,15 +94,6 @@ getVpnBypassStatusR = do
 
 getClientIpR :: Handler TypedContent
 getClientIpR = toJson . clientAdrToDec4 <$> getClientAdr
-
-chooseFavIcon :: ClientAdr -> WidgetFor Ypp ()
-chooseFavIcon cdr = do
-  app <- getYesod
-  isOff <- isVpnOff (app.packetMark, cdr)
-  toWidgetHead $
-    if isOff
-    then [hamlet|<link rel="shortcut icon" href="open.svg" type="image/svg">|]
-    else [hamlet|<link rel="shortcut icon" href="closed.svg" type="image/svg">|]
 
 withNet :: MonadUnliftIO m => Ypp -> m a -> m a
 withNet ap cb =
