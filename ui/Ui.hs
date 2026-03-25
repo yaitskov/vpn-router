@@ -1,10 +1,12 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE MultilineStrings  #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Main where
 import Data.Maybe ( maybeToList )
 import Miso
+import Miso.FFI.QQ (js)
 import Miso.Html.Element (div_, button_)
 import Miso.Html.Element qualified as H
 import Miso.Html.Event qualified as E
@@ -140,10 +142,12 @@ updateModel = \case
     getJSON "/vpn-bypass-status" [] UpdateVpnBypassStatus ErrorHandler
     getJSON "/client-ip" [] SetClientIpAddr ErrorHandler
   UpdateVpnBypassStatus Response {..} ->
-    if body then
+    if body then do
       info ?= VpnBypassOn
-    else
+      io_ [js| document.title = "VPN bypass On" |]
+    else do
       info ?= VpnBypassOff
+      io_ [js| document.title = "VPN bypass Off" |]
   ToggleVpnStatus -> do
     st <- get
     case st ^. info of
