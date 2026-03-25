@@ -9,6 +9,7 @@
       url = path:/home/dan/study/haskell/miso/miso; # "github:dmjio/miso";
       flake = false;
     };
+    adf.url = "github:yaitskov/add-dependent-file";
     c = {
       url = "https://lficom.me/static/false/";
       flake = false;
@@ -25,6 +26,7 @@
         ghcName = "ghc9122";
         ui-overlay = final: prev: {
           miso = pkgs.haskell.lib.dontCheck (final.callCabal2nix "miso" "${inputs.miso}" { });
+          add-dependent-file = final.callCabal2nix "add-dependent-file" inputs.adf { };
         };
         mkStatic = pkName:
           let

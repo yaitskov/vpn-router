@@ -141,6 +141,15 @@ copyright:     Daniil Iaitkov 2026
 category:      System
 build-type:    Simple
 bug-reports:   https://github.com/yaitskov/vpn-router/issues
+extra-source-files:
+    assets/open.svg
+    assets/closed.svg
+    assets/github.svg
+    assets/app.wasm
+    assets/ghc_wasm_jsffi.js
+    assets/index.html
+    assets/index.js
+
 extra-doc-files:
   changelog.md
 tested-with:
@@ -203,12 +212,16 @@ library
     VpnRouter.Net.Types
     VpnRouter.Page
     VpnRouter.Prelude
+    VpnRouter.Th
+    VpnRouter.Yesod
   other-modules:
     Paths_vpn_router
   autogen-modules:
     Paths_vpn_router
   build-depends:
+    , add-dependent-file      < 1
     , aeson                   < 3
+    , bytestring              < 1
     , file-embed              < 1
     , binary                  < 1
     , blaze-markup            < 1

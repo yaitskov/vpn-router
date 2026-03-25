@@ -13,6 +13,15 @@ copyright:     Daniil Iaitkov 2026
 category:      System
 build-type:    Simple
 bug-reports:   https://github.com/yaitskov/vpn-router/issues
+extra-source-files:
+    assets/open.svg
+    assets/closed.svg
+    assets/github.svg
+    assets/app.wasm
+    assets/ghc_wasm_jsffi.js
+    assets/index.html
+    assets/index.js
+
 extra-doc-files:
   changelog.md
 tested-with:
@@ -42,11 +51,6 @@ common base
     , relude >= 1.2.2 && < 2
     , tagged < 1
 
-common server-base
-  import: base
-  if arch(wasm32)
-    buildable: False
-
 library vpn-router-api
   import: base
   hs-source-dirs: api
@@ -59,7 +63,6 @@ library vpn-router-api
     , template-haskell        < 3
     , typelits-printf         < 1
     , unliftio                < 1
-    -- , wai                     < 4
 
 library
   import: server-base
@@ -75,12 +78,16 @@ library
     VpnRouter.Net.Types
     VpnRouter.Page
     VpnRouter.Prelude
+    VpnRouter.Th
+    VpnRouter.Yesod
   other-modules:
     Paths_vpn_router
   autogen-modules:
     Paths_vpn_router
   build-depends:
+    , add-dependent-file      < 1
     , aeson                   < 3
+    , bytestring              < 1
     , file-embed              < 1
     , binary                  < 1
     , blaze-markup            < 1
@@ -97,7 +104,6 @@ library
     , vpn-router-api
     , wai                     < 4
     , yesod-core              < 1.8
-
 
 test-suite test
   import: server-base
@@ -127,8 +133,6 @@ executable vpn-router
 
 executable jsbundle
   import: base
-  -- if flag(server-only)
-  --   buildable: False
   if arch(wasm32)
     ghc-options:
       -Wall -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start" -ddump-splices

@@ -3,28 +3,12 @@
 {-# LANGUAGE MultilineStrings  #-}
 
 module Main where
+import Data.Maybe ( maybeToList )
 import Miso
-    ( get,
-      startApp,
-      io_,
-      defaultEvents,
-      consoleError,
-      getJSON,
-      postJSON',
-      component,
-      text,
-      Effect,
-      Response(..),
-      MisoString,
-      App,
-      CSS(Style),
-      Component(styles, mount, scripts),
-      JS(Script),
-      ROOT,
-      View )
 import Miso.Html.Element (div_, button_)
 import Miso.Html.Element qualified as H
 import Miso.Html.Event qualified as E
+import Miso.Html.Event (onClick)
 import Miso.Html.Property (class_)
 import Miso.Html.Property qualified as P
 import Miso.Lens ( Lens, lens, (?=), (^.) )
@@ -42,8 +26,10 @@ data VpnBypassStatus
   | VpnBypassOff
   deriving (Show, Eq)
 
-newtype Model = Model
+data Model = Model
   { _info :: Maybe VpnBypassStatus
+  , restartConfirmationDialog :: Bool
+  , clientIp :: Maybe MisoString
   } deriving (Eq, Show)
 
 info :: Lens Model (Maybe VpnBypassStatus)
@@ -53,6 +39,10 @@ data Action
   = GetVpnBypassStatus
   | UpdateVpnBypassStatus (Response Bool)
   | ToggleVpnStatus
+  | SetClientIpAddr (Response MisoString)
+  | AskForRestart
+  | ConfirmVpnRestart
+  | VpnRestarted (Response ())
   | ErrorHandler (Response MisoString)
 
 app :: App Model Action
@@ -134,12 +124,21 @@ app = (component emptyModel updateModel viewModel)
   }
 
 emptyModel :: Model
-emptyModel = Model Nothing
+emptyModel = Model Nothing False Nothing
 
 updateModel :: Action -> Effect ROOT Model Action
 updateModel = \case
-  GetVpnBypassStatus ->
+  SetClientIpAddr Response {..} ->
+    modify (\x -> x { clientIp = Just body })
+  AskForRestart ->
+    modify (\x -> x { restartConfirmationDialog = True })
+  VpnRestarted _ ->
+    modify (\x -> x { restartConfirmationDialog = False })
+  ConfirmVpnRestart ->
+    postJSON "/restart-vpn" () [] VpnRestarted ErrorHandler
+  GetVpnBypassStatus -> do
     getJSON "/vpn-bypass-status" [] UpdateVpnBypassStatus ErrorHandler
+    getJSON "/client-ip" [] SetClientIpAddr ErrorHandler
   UpdateVpnBypassStatus Response {..} ->
     if body then
       info ?= VpnBypassOn
@@ -158,36 +157,46 @@ updateModel = \case
     io_ (consoleError body)
 
 viewModel :: Model -> View Model Action
-viewModel m =
-  div_
-    []
-    [ H.div_ [ P.class_ "github-link" ]
-      [ H.a_ [ P.href_ "https://github.com/yaitskov/vpn-router"
-             , P.alt_  "Link to VpnRouter project"
-             ]
-             [ H.img_ [ P.src_ "/github.svg" ] ]
-      ]
-    , div_ [ class_ "ipaddr" ] [ text "127.0.0.1" ]
-    , div_
-      [ class_ "restart-vpn" ]
-      [ button_
-          [ P.title_ "restart VPN" ]
-          [ "↻" ]
-      ]
-    , div_
-        [ class_ "butdiv" ]
-        [ case m ^. info of
-            Nothing -> text "Loading ..."
-            Just VpnBypassOn ->
-              button_
-              [ class_ "green autofocus"
-              , E.onClick ToggleVpnStatus
-              ]
-              [ "Use VPN" ]
-            Just VpnBypassOff ->
-              button_
-              [ class_ "red autofocus"
-              , E.onClick ToggleVpnStatus ]
-              [ "Bypass VPN" ]
+viewModel m = div_ [] $ [ header ] <> pages
+  where
+    header =
+      H.div_ [ P.class_ "github-link" ]
+        [ H.a_ [ P.href_ "https://github.com/yaitskov/vpn-router"
+               , P.alt_  "Link to VpnRouter project"
+               ]
+               [ H.img_ [ P.src_ "/github.svg" ] ]
         ]
-    ]
+    clientIpDiv = div_ [ class_ "ipaddr" ] $ maybeToList (text <$> clientIp m)
+    pages =
+      if restartConfirmationDialog m then
+        restart
+      else
+        home
+    restart =
+      [ clientIpDiv
+      , div_
+          [ class_ "butdiv" ]
+          [ button_
+              [ class_ "red", onClick ConfirmVpnRestart ]
+              [ "RESTART VPN" ]
+          ]
+      ]
+    home =
+      [ clientIpDiv
+      , div_
+          [ class_ "butdiv" ]
+          [ case m ^. info of
+              Nothing -> text "Loading ..."
+              Just VpnBypassOn ->
+                button_
+                [ class_ "green autofocus"
+                , E.onClick ToggleVpnStatus
+                ]
+                [ "Use VPN" ]
+              Just VpnBypassOff ->
+                button_
+                [ class_ "red autofocus"
+                , E.onClick ToggleVpnStatus ]
+                [ "Bypass VPN" ]
+          ]
+      ]
