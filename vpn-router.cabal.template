@@ -64,6 +64,11 @@ library vpn-router-api
     , typelits-printf         < 1
     , unliftio                < 1
 
+common server-base
+  import: base
+  if arch(wasm32)
+    buildable: False
+
 library
   import: server-base
   hs-source-dirs: src
