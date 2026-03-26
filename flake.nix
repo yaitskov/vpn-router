@@ -1,12 +1,14 @@
-# nix develop --profile .ndc --command true
-# nix develop ./.ndc
 {
   description = "VPN bypass";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/bc16855ba53f3cb6851903a393e7073d1b5911e7";
-    miso-flake.url = path:/home/dan/study/haskell/miso/miso; ## "github:dmjio/miso";
+    nix-wasm = {
+      url = "github:ners/nix-wasm";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    miso-flake.url = "github:dmjio/miso";
     miso = {
-      url = path:/home/dan/study/haskell/miso/miso; # "github:dmjio/miso";
+      url = "github:dmjio/miso";
       flake = false;
     };
     adf.url = "github:yaitskov/add-dependent-file";
@@ -20,14 +22,29 @@
       flake = false;
     };
   };
-  outputs = inputs@{ self, nixpkgs, flake-utils, uphack, c, ... }:
+  outputs = inputs@{ self, nixpkgs, nix-wasm, flake-utils, uphack, c, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
-        ui-overlay = final: prev: {
-          miso = pkgs.haskell.lib.dontCheck (final.callCabal2nix "miso" "${inputs.miso}" { });
-          add-dependent-file = final.callCabal2nix "add-dependent-file" inputs.adf { };
+        frontend = import ./frontend.nix {
+          inherit ghcName system nixpkgs nix-wasm ;
+          pname = "vpn-router";
+          miso = inputs.miso;
         };
+        injectFrontend = drv: drv.overrideAttrs(oa: {
+          buildInputs = oa.buildInputs ++ [ frontend ];
+          patchPhase = (oa.patchPhase or "") + ''
+            cp ${frontend}/share/* ./assets
+          '';
+        });
+        ui-overlay = final: prev:
+          with pkgs.haskell.lib.compose; {
+            miso =
+              (dontCheck
+                (enableCabalFlag "template-haskell"
+                  (final.callCabal2nix "miso" "${inputs.miso}" { })));
+            add-dependent-file = final.callCabal2nix "add-dependent-file" inputs.adf { };
+          };
         mkStatic = pkName:
           let
             pkgs = import nixpkgs {
@@ -83,13 +100,19 @@
             haskellPackagesO = pkgs.haskell.packages.${ghcName};
             inherit (pkgs.haskell.lib) dontCheck justStaticExecutables;
             haskellPackages = haskellPackagesO.override {
-              overrides = final: prev: {
-                vector = dontCheck prev.vector;
-              };
+              overrides = nixpkgs.lib.composeManyExtensions [
+                (final: prev: { vector = dontCheck prev.vector; })
+                ui-overlay
+              ];
             };
           in
-            assertStatic (compressElf (assertStatic (makeStatic (justStaticExecutables
-              (haskellPackages.callCabal2nix pkName self rec {})))));
+            assertStatic
+              (compressElf
+                (assertStatic
+                  (makeStatic
+                    (justStaticExecutables
+                      (injectFrontend
+                        (haskellPackages.callCabal2nix pkName self rec {}))))));
         mkDynamic = pkName:
           let
             bindNetTools = drv:
@@ -102,7 +125,10 @@
                 });
             inherit (pkgs.haskell.lib) dontHaddock;
           in
-            bindNetTools (dontHaddock (haskellPackages.callCabal2nix packageName self rec {}));
+            bindNetTools
+              (dontHaddock
+                (injectFrontend
+                  (haskellPackages.callCabal2nix packageName self rec {})));
         packageName = "vpn-router";
         pkgs = nixpkgs.legacyPackages.${system};
         haskellPackages = pkgs.haskell.packages.${ghcName}.extend(ui-overlay);

@@ -45,6 +45,21 @@
         "url": "https://lficom.me/static/false/"
       }
     },
+    "flake-compat": {
+      "locked": {
+        "lastModified": 1761640442,
+        "narHash": "sha256-AtrEP6Jmdvrqiv4x2xa5mrtaIp3OEe8uBYCDZDS+hu8=",
+        "owner": "nix-community",
+        "repo": "flake-compat",
+        "rev": "4a56054d8ffc173222d09dad23adf4ba946c8884",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -117,6 +132,24 @@
         "type": "github"
       }
     },
+    "flake-utils_5": {
+      "inputs": {
+        "systems": "systems_5"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
     "ghc-wasm-meta": {
       "inputs": {
         "flake-utils": "flake-utils_4",
@@ -138,17 +171,42 @@
         "type": "gitlab"
       }
     },
+    "ghc-wasm-meta_2": {
+      "inputs": {
+        "flake-utils": "flake-utils_5",
+        "nixpkgs": [
+          "nix-wasm",
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1771125696,
+        "narHash": "sha256-+90XoM7PUfgD7383ki/aHC0cLKS32XVnYgI672pegcY=",
+        "owner": "haskell-wasm",
+        "repo": "ghc-wasm-meta",
+        "rev": "4e1f900e9933966634bc2e29dbeb81d09ce36727",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haskell-wasm",
+        "repo": "ghc-wasm-meta",
+        "type": "github"
+      }
+    },
     "miso": {
       "flake": false,
       "locked": {
-        "lastModified": 1774255335,
-        "narHash": "sha256-AOw8Lci4haLaJMsDyPcV274mb7K+/rvFf+V7WX9icqU=",
-        "path": "/home/dan/study/haskell/miso/miso",
-        "type": "path"
+        "lastModified": 1774384830,
+        "narHash": "sha256-JNqCaEQN24z+J4iGUIo/fjb0fQfRD17WxS3BQzErgfk=",
+        "owner": "dmjio",
+        "repo": "miso",
+        "rev": "cd40aea01d3373b2616f708dd2d86dcc31bb25e2",
+        "type": "github"
       },
       "original": {
-        "path": "/home/dan/study/haskell/miso/miso",
-        "type": "path"
+        "owner": "dmjio",
+        "repo": "miso",
+        "type": "github"
       }
     },
     "miso-flake": {
@@ -158,14 +216,39 @@
         "nixpkgs": "nixpkgs_3"
       },
       "locked": {
-        "lastModified": 1774255335,
-        "narHash": "sha256-AOw8Lci4haLaJMsDyPcV274mb7K+/rvFf+V7WX9icqU=",
-        "path": "/home/dan/study/haskell/miso/miso",
-        "type": "path"
+        "lastModified": 1774384830,
+        "narHash": "sha256-JNqCaEQN24z+J4iGUIo/fjb0fQfRD17WxS3BQzErgfk=",
+        "owner": "dmjio",
+        "repo": "miso",
+        "rev": "cd40aea01d3373b2616f708dd2d86dcc31bb25e2",
+        "type": "github"
       },
       "original": {
-        "path": "/home/dan/study/haskell/miso/miso",
-        "type": "path"
+        "owner": "dmjio",
+        "repo": "miso",
+        "type": "github"
+      }
+    },
+    "nix-wasm": {
+      "inputs": {
+        "flake-compat": "flake-compat",
+        "ghc-wasm-meta": "ghc-wasm-meta_2",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1771148770,
+        "narHash": "sha256-U8HhfPXyMaJGjHJzSRyO0E/jRK8drLXLkzqYVls2XG8=",
+        "owner": "ners",
+        "repo": "nix-wasm",
+        "rev": "4b51e1134adb47c3082367c1a315e170333c0d5b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ners",
+        "repo": "nix-wasm",
+        "type": "github"
       }
     },
     "nixpkgs": {
@@ -239,6 +322,7 @@
         "flake-utils": "flake-utils_2",
         "miso": "miso",
         "miso-flake": "miso-flake",
+        "nix-wasm": "nix-wasm",
         "nixpkgs": "nixpkgs_4",
         "uphack": "uphack_2"
       }
@@ -289,6 +373,21 @@
       }
     },
     "systems_4": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "systems_5": {
       "locked": {
         "lastModified": 1681028828,
         "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
