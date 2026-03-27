@@ -146,7 +146,6 @@ extra-source-files:
     assets/closed.svg
     assets/github.svg
     assets/app.wasm
-    assets/ghc_wasm_jsffi.js
     assets/index.html
     assets/index.js
 

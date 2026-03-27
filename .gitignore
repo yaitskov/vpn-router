@@ -11,3 +11,4 @@
 /public/
 /assets/app.wasm
 /assets/ghc_wasm_jsffi.js
+/assets/browser_wasi_shim/

@@ -1,12 +1,17 @@
 {
-  description = "VPN bypass";
+  description = ''Web service for LAN allowing hosts in the network
+                  (eg mobile phones on Wifi) to bypass VPN that covers the whole NAT.
+                  No need to hop across WiFis which be not very ergonomic.
+                  Destops are connected through cable and their users don't have the choice at all.
+                '';
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/bc16855ba53f3cb6851903a393e7073d1b5911e7";
     nix-wasm = {
       url = "github:ners/nix-wasm";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    miso-flake.url = "github:dmjio/miso";
+    ghc-wasm-meta.url =
+      "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
     miso = {
       url = "github:dmjio/miso";
       flake = false;
@@ -22,12 +27,22 @@
       flake = false;
     };
   };
-  outputs = inputs@{ self, nixpkgs, nix-wasm, flake-utils, uphack, c, ... }:
+  outputs = inputs@{ self, nixpkgs, nix-wasm, ghc-wasm-meta, flake-utils, uphack, c, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
+        sourceFilter = root: with nixpkgs.lib.fileset; toSource {
+          inherit root;
+          fileset = fileFilter
+            (file: file.name == "LICENSE" ||
+                   file.name == "index.js" ||
+                   # skip cabal.project.local
+                   builtins.any file.hasExt [ "cabal" "hs" "md" "svg" "html" "yaml" ])
+            root;
+        };
+
         frontend = import ./frontend.nix {
-          inherit ghcName system nixpkgs nix-wasm ;
+          inherit ghcName system nixpkgs nix-wasm sourceFilter;
           pname = "vpn-router";
           miso = inputs.miso;
         };
@@ -112,7 +127,7 @@
                   (makeStatic
                     (justStaticExecutables
                       (injectFrontend
-                        (haskellPackages.callCabal2nix pkName self rec {}))))));
+                        (haskellPackages.callCabal2nix pkName (sourceFilter ./.) { }))))));
         mkDynamic = pkName:
           let
             bindNetTools = drv:
@@ -128,7 +143,7 @@
             bindNetTools
               (dontHaddock
                 (injectFrontend
-                  (haskellPackages.callCabal2nix packageName self rec {})));
+                  (haskellPackages.callCabal2nix packageName (sourceFilter ./.) {})));
         packageName = "vpn-router";
         pkgs = nixpkgs.legacyPackages.${system};
         haskellPackages = pkgs.haskell.packages.${ghcName}.extend(ui-overlay);
@@ -138,13 +153,31 @@
             mkStatic packageName
           else
             mkDynamic packageName;
-
+        # packages.frontend = frontend;
         devShells = {
-          ui = inputs.miso-flake.outputs.devShells.${system}.wasm.overrideAttrs(oa: {
-            shellHook = ''
-              . miso.sh
-            '';
-          });
+          ui = pkgs.mkShell {
+            name = "The miso ${system} GHC WASM 9.12.2 shell";
+            packages = with pkgs; [
+              ghc-wasm-meta.packages.${system}.all_9_12
+              bun
+              http-server
+              cabal-install
+              tailwindcss_4
+              ghciwatch
+            ];
+            shellHook =
+              let
+                staticAssets = pkgs.callPackage ./static-assets.nix { };
+              in
+                ''
+                  echo Copy unpacked WASI shim to assets
+                  rm -rf assets/browser_wasi_shim
+                  cp -r ${staticAssets}/browser_wasi_shim assets/browser_wasi_shim
+                  chmod +w -R assets/browser_wasi_shim
+                  . miso.sh
+                '';
+          };
+
           default = pkgs.mkShell {
             buildInputs = [ haskellPackages.haskell-language-server ] ++ (with pkgs; [
               ghcid
@@ -160,6 +193,6 @@
           };
         };
 
-        nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.${system}.default) ;
+        nixosModules.default = import ./nixos/flake-vpn-router.nix (self.packages.${system}.default);
       });
 }
