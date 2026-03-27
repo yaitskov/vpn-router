@@ -50,6 +50,7 @@
           buildInputs = oa.buildInputs ++ [ frontend ];
           patchPhase = (oa.patchPhase or "") + ''
             cp ${frontend}/share/* ./assets
+            sed -i "s/\?v=000/\?v=$(md5sum ./assets/app.wasm | cut -d' ' -f1)/" ./assets/index.html
           '';
         });
         ui-overlay = final: prev:
