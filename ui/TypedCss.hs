@@ -26,10 +26,10 @@ import Prelude
 
 newtype CssClass s = CssClass { unCssClass :: s } deriving (Show, Eq, Ord)
 
-instance Semigroup (CssClass Text) where
+instance (Semigroup s, IsString s) => Semigroup (CssClass s) where
   CssClass l <> CssClass r = CssClass $ l <> " " <> r
 
-class_ ::  CssClass Text -> Text
+class_ :: IsString s => CssClass s -> s
 class_ = unCssClass
 
 css :: QuasiQuoter
@@ -62,10 +62,15 @@ collectReferedClasses s = \case
 cssClassConstDec :: CssClass Text -> [Dec]
 cssClassConstDec (CssClass cn) =
   [ PragmaD (InlineP n Inline FunLike AllPhases)
-  , SigD n (AppT (ConT ''CssClass) (ConT ''Text))
+  , SigD n
+    (ForallT
+      [PlainTV st InferredSpec]
+      [AppT (ConT ''IsString) (VarT st)]
+      (AppT (ConT ''CssClass) (VarT st)))
   , FunD n [ Clause [] body [] ]
   ]
   where
+    st = mkName "s"
     ns = unpack cn
     n = mkName $ escapeIden ns
     body = NormalB (AppE (ConE 'CssClass) (LitE (StringL ns)))

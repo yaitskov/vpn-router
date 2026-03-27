@@ -5,8 +5,14 @@
 
 module Main where
 import CssStyle
+    ( cssAsLiteralText,
+      butdiv,
+      githubLink,
+      green,
+      ipaddr,
+      red,
+      restartVpn )
 import Data.Maybe ( maybeToList )
-import Data.Text
 import Miso
 import Miso.FFI.QQ (js)
 import Miso.Html.Element (div_, button_)
@@ -105,8 +111,8 @@ updateModel = \case
   ErrorHandler Response {..} ->
     io_ (consoleError body)
 
-class_ :: TC.CssClass Text -> Attribute action
-class_ = P.class_ . ms . TC.class_
+class_ :: TC.CssClass MisoString -> Attribute action
+class_ = P.class_ . TC.class_
 
 viewModel :: Model -> View Model Action
 viewModel m = div_ [] $ [ header ] <> pages
