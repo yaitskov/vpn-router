@@ -1,5 +1,7 @@
 # vpn-router changelog
 
+## Version 0.0.6 2026-03-27
+  * frontend rewrite to miso library
 ## Version 0.0.5 2026-02-09
   * lazy init to minimize collision with VPN
   * cleanup on sigTERM and sigINT
