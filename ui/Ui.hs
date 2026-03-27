@@ -61,7 +61,7 @@ app = (component emptyModel updateModel viewModel)
         });
       """
     ]
-  , styles = [ Style $ ms CssStyle.cssAsLiteralText ]
+  , styles = [ Style CssStyle.cssAsLiteralText ]
   }
 
 emptyModel :: Model

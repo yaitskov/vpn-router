@@ -4,20 +4,24 @@ import Data.CSS.Syntax.Tokens ( tokenize, Token(Ident, Delim) )
 import Data.Char
     ( isAlpha, isAlphaNum, isUpper, toLower, toUpper )
 import Data.Set ( insert, Set, toList )
+import Data.String ( IsString )
 import Data.Text ( Text, pack, unpack )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..) )
 import Language.Haskell.TH.Syntax
     ( mkName,
       Exp(LitE, AppE, ConE),
       Clause(Clause),
-      Type(ConT, AppT),
-      Dec(FunD, PragmaD, SigD),
-      Phases(AllPhases),
+      Type(VarT, ForallT, AppT, ConT),
+      Dec(PragmaD, SigD, FunD),
       Body(NormalB),
       Inline(Inline),
       Lit(StringL),
+      Phases(AllPhases),
       Pragma(InlineP),
-      RuleMatch(FunLike) )
+      RuleMatch(FunLike),
+      Specificity(InferredSpec),
+      TyVarBndr(PlainTV) )
+
 import Prelude
 
 newtype CssClass s = CssClass { unCssClass :: s } deriving (Show, Eq, Ord)
@@ -74,17 +78,22 @@ cssToDecs s = go $ pack s
 {- | generate definition like:
 @@
   {-# INLINE cssAsLiteralText #-}
-  cssAsLiteralText :: Text
+  cssAsLiteralText :: IsString s => s
   cssAsLiteralText = s
 @@
 -}
 cssAsLiteralTextD :: String -> [Dec]
 cssAsLiteralTextD s =
-  [ SigD n (ConT ''Text)
+  [ SigD n
+    (ForallT
+      [PlainTV st InferredSpec]
+      [AppT (ConT ''IsString) (VarT st)]
+      (VarT st))
   , FunD n [ Clause [] body [] ]
   , PragmaD (InlineP n Inline FunLike AllPhases)
   ]
   where
+    st = mkName "s"
     n = mkName "cssAsLiteralText"
     body = NormalB (LitE (StringL s))
 
