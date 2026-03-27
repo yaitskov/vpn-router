@@ -198,11 +198,6 @@ source-repository head
   location:
     https://github.com/yaitskov/vpn-router.git
 
-flag server-only
-     description: skip building UI that generates JS bundle
-     default: False
-     manual: True
-
 common base
   default-language: GHC2024
   ghc-options: -Wall
@@ -301,19 +296,27 @@ executable vpn-router
   build-depends:
     , vpn-router
 
+flag debug
+  description: dump splices on frontend
+  default: False
+  manual: True
+
 executable jsbundle
   import: base
   if arch(wasm32)
     ghc-options:
-      -Wall -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start" -ddump-splices
+      -Wall -no-hs-main -optl-mexec-model=reactor "-optl-Wl,--export=hs_start"
     cpp-options:
        -DWASM
+    if flag(debug)
+      ghc-options:
+        -ddump-splices
   hs-source-dirs:
     ui
   main-is:
     Ui.hs
   build-depends:
     , base
-    , miso
-    , mtl
+    , miso             < 2
+    , mtl              < 3
     , vpn-router-api
