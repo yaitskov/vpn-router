@@ -116,24 +116,59 @@ There is a simple UI available with a toggle button to control the VPN bypass.
 
 ## Development environment
 
-HLS should be available inside the dev environment.
+JS bundle is included into ELF file. So in case when frontend files
+are not served with a http proxy the JS bundle should be generated
+before server launch, because server embeds HTML and JS into ELF.
+GIT repository does not have generated JS code.
+
+### Build UI first
+
+``` shell
+$ nix develop .#ui
+$ miso update build optim
+```
+update and optim arguments are optional.
+Hooks in ui dev shell provide WASM shim.
+
+### Main dev shell
+HLS should be available inside the default dev shell.
 
 ```shell
 $ nix develop
 $ emacs src/VpnRouter/Net.hs &
+$ emacs ui/Ui.hs &
 $ cabal build
 $ cabal test
+$ sudo  ./result/bin/vpn-router run  -p 3333
+$ firefox http://localhost:3333 &
 ```
+
+### Rebuild UI without backend
+
+Backend serves frontend and to avoid rebuilding backend during
+frontend development launch a web server:
+
+``` shell
+$ miso  build serve
+```
+
+## Build
 
 ```shell
 $ nix build
 $ sudo ./result/bin/vpn-router run
 ```
 
-## Static linking
+### Static linking
 
 ```shell
 nix build --override-input c https://lficom.me/static/true/.tar
 # faster build on beefy machine
 nix build --override-input c https://lficom.me/static/true/.tar --cores 20 -j 20
+```
+#### Shortcut with e tool
+
+e tool is part of [literal-flake-input](https://lficom.me).
+``` shell
+nix build $(e -static true)
 ```

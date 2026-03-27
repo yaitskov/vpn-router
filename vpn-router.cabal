@@ -116,22 +116,60 @@ description:
     == Development environment
     #development-environment#
     
-    HLS should be available inside the dev environment.
+    JS bundle is included into ELF file. So in case when frontend files are
+    not served with a http proxy the JS bundle should be generated before
+    server launch, because server embeds HTML and JS into ELF. GIT
+    repository does not have generated JS code.
+    
+    === Build UI first
+    #build-ui-first#
+    
+    > $ nix develop .#ui
+    > $ miso update build optim
+    
+    update and optim arguments are optional. Hooks in ui dev shell provide
+    WASM shim.
+    
+    === Main dev shell
+    #main-dev-shell#
+    
+    HLS should be available inside the default dev shell.
     
     > $ nix develop
     > $ emacs src/VpnRouter/Net.hs &
+    > $ emacs ui/Ui.hs &
     > $ cabal build
     > $ cabal test
+    > $ sudo  ./result/bin/vpn-router run  -p 3333
+    > $ firefox http://localhost:3333 &
+    
+    === Rebuild UI without backend
+    #rebuild-ui-without-backend#
+    
+    Backend serves frontend and to avoid rebuilding backend during frontend
+    development launch a web server:
+    
+    > $ miso  build serve
+    
+    == Build
+    #build#
     
     > $ nix build
     > $ sudo ./result/bin/vpn-router run
     
-    == Static linking
+    === Static linking
     #static-linking#
     
     > nix build --override-input c https://lficom.me/static/true/.tar
     > # faster build on beefy machine
     > nix build --override-input c https://lficom.me/static/true/.tar --cores 20 -j 20
+    
+    ==== Shortcut with e tool
+    #shortcut-with-e-tool#
+    
+    e tool is part of <https://lficom.me literal-flake-input>.
+    
+    > nix build $(e -static true)
 homepage:      http://github.com/yaitskov/vpn-router
 license:       BSD-3-Clause
 license-file:  LICENSE
