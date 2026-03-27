@@ -315,8 +315,13 @@ executable jsbundle
     ui
   main-is:
     Ui.hs
+  other-modules:
+    CssStyle
+    TypedCss
   build-depends:
     , base
+    , css-syntax
+    , template-haskell
     , miso             < 2
     , mtl              < 3
     , vpn-router-api
