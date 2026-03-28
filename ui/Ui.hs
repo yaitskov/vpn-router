@@ -4,6 +4,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Main where
+import CssClassBindings qualified as TC
 import CssStyle
     ( cssAsLiteralText,
       butdiv,
@@ -22,7 +23,7 @@ import Miso.Html.Event (onClick)
 import Miso.Html.Property qualified as P
 import Miso.Lens ( Lens, lens, (?=), (^.) )
 import Prelude
-import TypedCss qualified as TC
+
 
 #ifdef WASM
 foreign export javascript "hs_start" main :: IO ()

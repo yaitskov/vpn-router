@@ -1,7 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 module CssStyle where
-
-import TypedCss ( css )
+import CssClassBindings (css)
 
 [css|
 .github-link {

@@ -1,5 +1,4 @@
 function miso() {
-    set -e
     STATIC="${STATIC:-assets}"
     BACKEND="${BACKEND:-http://localhost:8081}"
     CABAL_UI_APP="${CABAL_UI_APP:-jsbundle}"
@@ -23,7 +22,7 @@ EOF
             update)
 	        wasm32-wasi-cabal update ;;
             build)
-	        wasm32-wasi-cabal build
+	        wasm32-wasi-cabal build || break
 	        MY_WASM="$(wasm32-wasi-cabal list-bin $CABAL_UI_APP | tail -n 1)"
 	        $(wasm32-wasi-ghc --print-libdir)/post-link.mjs \
                                                  --input "$MY_WASM" \
@@ -65,5 +64,4 @@ EOF
         esac
         shift
     done
-    set +e
 }

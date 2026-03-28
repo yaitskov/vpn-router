@@ -16,6 +16,10 @@
       url = "github:dmjio/miso";
       flake = false;
     };
+    css-class-bindings = {
+      url = "github:yaitskov/css-class-bindings";
+      flake = false;
+    };
     adf.url = "github:yaitskov/add-dependent-file";
     c = {
       url = "https://lficom.me/static/false/";
@@ -27,7 +31,7 @@
       flake = false;
     };
   };
-  outputs = inputs@{ self, nixpkgs, nix-wasm, ghc-wasm-meta, flake-utils, uphack, c, ... }:
+  outputs = inputs@{ self, nixpkgs, nix-wasm, ghc-wasm-meta, flake-utils, uphack, c, css-class-bindings, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
@@ -45,6 +49,7 @@
           inherit ghcName system nixpkgs nix-wasm sourceFilter;
           pname = "vpn-router";
           miso = inputs.miso;
+          inherit css-class-bindings;
         };
         injectFrontend = drv: drv.overrideAttrs(oa: {
           buildInputs = oa.buildInputs ++ [ frontend ];
@@ -59,6 +64,7 @@
               (dontCheck
                 (enableCabalFlag "template-haskell"
                   (final.callCabal2nix "miso" "${inputs.miso}" { })));
+            css-class-bindings = final.callCabal2nix "css-class-bindings" inputs.css-class-bindings { };
             add-dependent-file = final.callCabal2nix "add-dependent-file" inputs.adf { };
           };
         mkStatic = pkName:
