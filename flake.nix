@@ -41,7 +41,7 @@
             (file: file.name == "LICENSE" ||
                    file.name == "index.js" ||
                    # skip cabal.project.local
-                   builtins.any file.hasExt [ "cabal" "hs" "md" "svg" "html" "yaml" ])
+                   builtins.any file.hasExt [ "cabal" "hs" "md" "svg" "html" "yaml" "css" ])
             root;
         };
 

@@ -6,7 +6,7 @@
 module Main where
 import CssClassBindings qualified as TC
 import CssStyle
-    ( cssAsLiteralText,
+    ( style,
       butdiv,
       githubLink,
       green,
@@ -68,7 +68,7 @@ app = (component emptyModel updateModel viewModel)
         });
       """
     ]
-  , styles = [ Style CssStyle.cssAsLiteralText ]
+  , styles = [ Style style ]
   }
 
 emptyModel :: Model

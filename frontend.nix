@@ -2,12 +2,6 @@ inputs@{ pname, ghcName, system, nixpkgs, nix-wasm, sourceFilter, css-class-bind
 with builtins;
 let
   inherit (nixpkgs) lib;
-  # sourceFilter = root: with lib.fileset; toSource {
-  #   inherit root;
-  #   fileset = fileFilter
-  #     (file: file.name == "LICENSE" || file.name == "index.js" || any file.hasExt [ "cabal" "hs" "md" ])
-  #     root;
-  # };
   injectStaticJs = drv: drv.overrideAttrs(oa:
     { installPhase = oa.installPhase + ''
         cp ./assets/index.js $out/bin
@@ -21,7 +15,6 @@ let
       jsaddle-wasm = addBuildDepend hfinal.parser-regex hprev.jsaddle-wasm;
       staticAssets = pkgs.callPackage ./static-assets.nix { };
       css-class-bindings = (hfinal.callCabal2nix "css-class-bindings" inputs.css-class-bindings { });
-      # inherit css-class-bindings;
       miso = enableCabalFlag "template-haskell" (hfinal.callCabal2nix "miso" inputs.miso { });
     })
     (hfinal: hprev: lib.optionalAttrs (hprev.ghc.targetPrefix == "wasm32-wasi-") {

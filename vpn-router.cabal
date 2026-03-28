@@ -186,6 +186,7 @@ extra-source-files:
     assets/app.wasm
     assets/index.html
     assets/index.js
+    assets/style.css
 
 extra-doc-files:
   changelog.md
@@ -320,7 +321,7 @@ executable jsbundle
   build-depends:
     , base
     , css-class-bindings < 0.0.2
-    , file-embed         < 1
     , miso               < 2
     , mtl                < 3
+    , relude
     , vpn-router-api
