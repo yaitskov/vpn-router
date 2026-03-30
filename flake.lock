@@ -8,11 +8,11 @@
         "uphack": "uphack"
       },
       "locked": {
-        "lastModified": 1772098863,
-        "narHash": "sha256-w3sBos/QwTSwLBuTKyKDCQlab6Sqf0hNh573mixasNs=",
+        "lastModified": 1774857134,
+        "narHash": "sha256-KmyNxE6oNYitoIBYlYhbxnUtSxqQqdzZkMLiBNkCbdU=",
         "owner": "yaitskov",
         "repo": "add-dependent-file",
-        "rev": "7607b08cba9ecf9e218d1f8935244632790b6576",
+        "rev": "d49bb4f405237cf0f3d4bf1168b62aa73ffab5b2",
         "type": "github"
       },
       "original": {
@@ -48,11 +48,11 @@
     "css-class-bindings": {
       "flake": false,
       "locked": {
-        "lastModified": 1774724339,
-        "narHash": "sha256-kqe8cOd0M7dQlhfoqkZ9NP8G4U/rSyNojhvE30bqjZI=",
+        "lastModified": 1774857605,
+        "narHash": "sha256-C2gtZq3O8ja0VPHbqfL/MhcVRbyUdjEjFPk/g/q/rAI=",
         "owner": "yaitskov",
         "repo": "css-class-bindings",
-        "rev": "4e4545c34a9b624a72d054b239e9f9d037400137",
+        "rev": "d36c0c8bfaf1b2cbce67730610c8bae19387595b",
         "type": "github"
       },
       "original": {

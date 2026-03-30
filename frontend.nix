@@ -1,4 +1,4 @@
-inputs@{ pname, ghcName, system, nixpkgs, nix-wasm, sourceFilter, css-class-bindings, ... }:
+inputs@{ pname, ghcName, system, nixpkgs, nix-wasm, sourceFilter, ... }:
 with builtins;
 let
   inherit (nixpkgs) lib;
@@ -14,7 +14,8 @@ let
     (hfinal: hprev: {
       jsaddle-wasm = addBuildDepend hfinal.parser-regex hprev.jsaddle-wasm;
       staticAssets = pkgs.callPackage ./static-assets.nix { };
-      css-class-bindings = (hfinal.callCabal2nix "css-class-bindings" inputs.css-class-bindings { });
+      add-dependent-file = hfinal.callCabal2nix "add-dependent-file" inputs.adf { };
+      css-class-bindings = hfinal.callCabal2nix "css-class-bindings" inputs.css-class-bindings { };
       miso = enableCabalFlag "template-haskell" (hfinal.callCabal2nix "miso" inputs.miso { });
     })
     (hfinal: hprev: lib.optionalAttrs (hprev.ghc.targetPrefix == "wasm32-wasi-") {

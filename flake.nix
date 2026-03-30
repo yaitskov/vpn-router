@@ -31,7 +31,7 @@
       flake = false;
     };
   };
-  outputs = inputs@{ self, nixpkgs, nix-wasm, ghc-wasm-meta, flake-utils, uphack, c, css-class-bindings, ... }:
+  outputs = inputs@{ self, nixpkgs, nix-wasm, ghc-wasm-meta, flake-utils, uphack, c, css-class-bindings, adf, ... }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         ghcName = "ghc9122";
@@ -49,6 +49,7 @@
           inherit ghcName system nixpkgs nix-wasm sourceFilter;
           pname = "vpn-router";
           miso = inputs.miso;
+          inherit adf;
           inherit css-class-bindings;
         };
         injectFrontend = drv: drv.overrideAttrs(oa: {
