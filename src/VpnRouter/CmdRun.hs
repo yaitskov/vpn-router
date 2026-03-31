@@ -2,7 +2,9 @@
 module VpnRouter.CmdRun where
 
 import Data.Version (showVersion)
-import Network.Wai.Handler.Warp (runEnv)
+import Network.Wai.Handler.Warp
+    ( setLogger, setPort, setServerName, runSettings, defaultSettings )
+import Network.Wai.Logger ( withStdoutLogger )
 import Paths_vpn_router ( version )
 import VpnRouter.Bash ( checkAppOnPath )
 import VpnRouter.Service
@@ -48,7 +50,13 @@ runCmd = \case
     runReaderT
       (do
         app <- serve api service
-        liftIO $ runEnv (untag rs.httpPortToListen) app)
+        liftIO $ do
+          withStdoutLogger $ \aploger -> do
+            runSettings
+              (setServerName "VpnRouter"
+               $ setLogger aploger
+               $ setPort (untag rs.httpPortToListen) defaultSettings)
+              app)
       ypp
 
   VpnRouterVersion ->

@@ -272,6 +272,7 @@ library
     , unliftio-servant-server < 1
     , vpn-router-api
     , wai                     < 4
+    , wai-logger              < 3
     , warp                    < 4
 
 test-suite test
