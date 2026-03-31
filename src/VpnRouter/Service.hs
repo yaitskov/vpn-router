@@ -4,18 +4,16 @@
 module VpnRouter.Service where
 
 import Control.Monad.Logger ( logInfo, LoggingT )
-import Network.HTTP.Media ((//), (/:))
 import Network.Socket ( SockAddr )
+import Network.HTTP.Media ((//), (/:))
 import Servant
     ( type (:<|>)(..),
-      Accept(contentType),
-      JSON,
-      MimeRender(..),
-      RemoteHost,
-      type (:>),
       Get,
-      Post,
+      type (:>),
+      Accept(contentType),
+      MimeRender(..),
       HasServer(ServerT) )
+import VpnRouter.Api ( VpnRouterAjaxApi )
 import VpnRouter.Prelude
 import VpnRouter.Net
     ( isVpnOff,
@@ -34,20 +32,8 @@ import VpnRouter.Net.Types
       IspNic,
       clientAdrToDec4 )
 import VpnRouter.Th ( includeFile )
-import UnliftIO (MonadUnliftIO)
+import UnliftIO ( MonadUnliftIO )
 import UnliftIO.MVar ( withMVar )
-
-
-data AppSt
-  = AppSt
-    { ispNic :: Tagged IspNic Text
-    , gatewayHost :: Tagged Gateway HostIp
-    , packetMark :: PacketMark
-    , routingTableId :: RoutingTableId
-    , vpnService :: Tagged VpnService Text
-    , netLock :: MVar ()
-    , init :: MVar ()
-    }
 
 data Html
 instance Accept Html where
@@ -70,18 +56,30 @@ instance Accept Wasm where
 instance MimeRender Wasm ByteString where
   mimeRender _ = toLazy
 
-type AppM = LoggingT (ReaderT AppSt IO)
 
-type VpnRouterApi
-  = VpnBypassStatusApi :<|> ClientIpApi :<|> OffApi :<|> OnApi
-    :<|> "restart-vpn" :> RemoteHost :> Post '[JSON] ()
-    :<|> "github.svg" :> Get '[Svg] ByteString
-    :<|> "open.svg" :> Get '[Svg] ByteString
-    :<|> "closed.svg" :> Get '[Svg] ByteString
-    :<|> "favicon.ico" :> Get '[Svg] ByteString
-    :<|> "index.js" :> Get '[JS] ByteString
-    :<|> "app.wasm" :> Get '[Wasm] ByteString
-    :<|> Get '[Html] ByteString
+type StaticFilesApi
+  =    "github.svg" :> Get '[Svg] ByteString
+  :<|> "open.svg" :> Get '[Svg] ByteString
+  :<|> "closed.svg" :> Get '[Svg] ByteString
+  :<|> "favicon.ico" :> Get '[Svg] ByteString
+  :<|> "index.js" :> Get '[JS] ByteString
+  :<|> "app.wasm" :> Get '[Wasm] ByteString
+  :<|> Get '[Html] ByteString
+
+type VpnRouterApi = VpnRouterAjaxApi :<|> StaticFilesApi
+
+data AppSt
+  = AppSt
+    { ispNic :: Tagged IspNic Text
+    , gatewayHost :: Tagged Gateway HostIp
+    , packetMark :: PacketMark
+    , routingTableId :: RoutingTableId
+    , vpnService :: Tagged VpnService Text
+    , netLock :: MVar ()
+    , init :: MVar ()
+    }
+
+type AppM = LoggingT (ReaderT AppSt IO)
 
 github :: AppM ByteString
 github = pure $(includeFile "assets/github.svg")
@@ -98,17 +96,12 @@ appWasm = pure $(includeFile "assets/app.wasm")
 home :: AppM ByteString
 home = pure $(includeFile "assets/index.html")
 
-type VpnBypassStatusApi
-  = "vpn-bypass-status"
-  :> RemoteHost
-  :> Get '[JSON] Bool
 vpnBypassStatus :: SockAddr -> AppM Bool
 vpnBypassStatus sa = do
   cdr <- sockAdrToClientAdr sa
   pm <- asks packetMark
   isVpnOff (pm, cdr)
 
-type ClientIpApi = "client-ip" :> RemoteHost :> Get '[JSON] Text
 clientIp :: SockAddr -> AppM Text
 clientIp sa = clientAdrToDec4 <$> sockAdrToClientAdr sa
 
@@ -122,7 +115,6 @@ withNet ap cb =
           manualInit ap.routingTableId ap.packetMark ap.ispNic ap.gatewayHost
     cb
 
-type OffApi = "off" :> RemoteHost :> Post '[JSON] Bool
 offBypass :: SockAddr -> AppM Bool
 offBypass sa = do
   ap <- ask
@@ -131,7 +123,6 @@ offBypass sa = do
   withNet ap $ turnOffVpnFor ca ap.packetMark
   vpnBypassStatus sa
 
-type OnApi = "on" :> RemoteHost :> Post '[JSON] Bool
 onBypass :: SockAddr -> AppM Bool
 onBypass sa = do
   ap <- ask
@@ -153,10 +144,14 @@ doRestartVpn sa = do
 api :: Proxy VpnRouterApi
 api = Proxy
 
+staticService :: ServerT StaticFilesApi AppM
+staticService = github :<|> open :<|> closed :<|> favicon :<|> index :<|> appWasm :<|> home
+
+ajaxService :: ServerT VpnRouterAjaxApi AppM
+ajaxService = vpnBypassStatus :<|> clientIp :<|> offBypass :<|> onBypass :<|> doRestartVpn
+
 service :: ServerT VpnRouterApi AppM
-service =
-  vpnBypassStatus :<|> clientIp :<|> offBypass :<|> onBypass :<|> doRestartVpn :<|>
-  github :<|> open :<|> closed :<|> favicon :<|> index :<|> appWasm :<|> home
+service = ajaxService :<|> staticService
 
 cleanUpOnDemand :: MonadIO m => AppSt -> m ()
 cleanUpOnDemand ap =

@@ -54,7 +54,9 @@ library vpn-router-api
   build-depends:
     , file-embed              < 1
     , binary                  < 1
+    , http-media              < 1
     , regex-tdfa              < 2
+    , servant                 < 3
     , template-haskell        < 3
     , typelits-printf         < 1
     , unliftio                < 1
@@ -158,9 +160,10 @@ executable jsbundle
   other-modules:
     CssStyle
   build-depends:
-    , base
     , css-class-bindings >= 0.0.3 && < 1
     , miso               < 2
     , mtl                < 3
     , relude
+    , servant            < 3
+    , servant-miso-client < 1
     , vpn-router-api

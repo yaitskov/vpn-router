@@ -23,3 +23,8 @@ source-repository-package
   type: git
   location: https://github.com/yaitskov/add-dependent-file
   tag: master
+
+source-repository-package
+  type: git
+  location: https://github.com/haskell-miso/servant-miso-client
+  tag: master

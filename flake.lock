@@ -194,15 +194,16 @@
     "miso": {
       "flake": false,
       "locked": {
-        "lastModified": 1774384830,
-        "narHash": "sha256-JNqCaEQN24z+J4iGUIo/fjb0fQfRD17WxS3BQzErgfk=",
-        "owner": "dmjio",
+        "lastModified": 1774980693,
+        "narHash": "sha256-QN/c+qpXUV1QAXgEXqaE6w9tS0PSfvel4MzxPGSAvMc=",
+        "owner": "yaitskov",
         "repo": "miso",
-        "rev": "cd40aea01d3373b2616f708dd2d86dcc31bb25e2",
+        "rev": "bec23194de61a8320e88e42edaf12d6e5dfa327b",
         "type": "github"
       },
       "original": {
-        "owner": "dmjio",
+        "owner": "yaitskov",
+        "ref": "from-json-text",
         "repo": "miso",
         "type": "github"
       }
@@ -287,7 +288,24 @@
         "miso": "miso",
         "nix-wasm": "nix-wasm",
         "nixpkgs": "nixpkgs_3",
+        "smc": "smc",
         "uphack": "uphack_2"
+      }
+    },
+    "smc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1771307526,
+        "narHash": "sha256-y1wZa4aI8b6uYHQk0312AAJTTFmEF28anElPUQrqls0=",
+        "owner": "haskell-miso",
+        "repo": "servant-miso-client",
+        "rev": "d3448a2a2b6aee4155273a3d02b828b026796b8a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haskell-miso",
+        "repo": "servant-miso-client",
+        "type": "github"
       }
     },
     "systems": {

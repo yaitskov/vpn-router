@@ -16,6 +16,7 @@ let
       staticAssets = pkgs.callPackage ./static-assets.nix { };
       add-dependent-file = hfinal.callCabal2nix "add-dependent-file" inputs.adf { };
       css-class-bindings = hfinal.callCabal2nix "css-class-bindings" inputs.css-class-bindings { };
+      servant-miso-client = hfinal.callCabal2nix "servant-miso-client" inputs.smc { };
       miso = enableCabalFlag "template-haskell" (hfinal.callCabal2nix "miso" inputs.miso { });
     })
     (hfinal: hprev: lib.optionalAttrs (hprev.ghc.targetPrefix == "wasm32-wasi-") {

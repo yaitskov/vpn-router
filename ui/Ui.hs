@@ -13,7 +13,6 @@ import CssStyle
       ipaddr,
       red,
       restartVpn )
-import Data.Maybe ( maybeToList )
 import Miso
 import Miso.FFI.QQ (js)
 import Miso.Html.Element (div_, button_)
@@ -22,8 +21,23 @@ import Miso.Html.Event qualified as E
 import Miso.Html.Event (onClick)
 import Miso.Html.Property qualified as P
 import Miso.Lens ( Lens, lens, (?=), (^.) )
-import Prelude
+import Relude
+import Servant.API ( type (:<|>)((:<|>)) )
+import Servant.Miso.Client ( toClient )
+import VpnRouter.Api ( VpnRouterAjaxApi )
 
+
+api :: Proxy VpnRouterAjaxApi
+api = Proxy
+
+type ApiSig r = (Response r -> IO ()) -> (Response MisoString -> IO ()) -> IO ()
+
+vpnBypassStatus :: ApiSig Bool
+getClientIp :: ApiSig Text
+offBypass :: ApiSig Bool
+onBypass :: ApiSig Bool
+doRestartVpn :: ApiSig ()
+vpnBypassStatus :<|> getClientIp :<|> offBypass :<|> onBypass :<|> doRestartVpn = toClient mempty api
 
 #ifdef WASM
 foreign export javascript "hs_start" main :: IO ()
@@ -74,6 +88,9 @@ app = (component emptyModel updateModel viewModel)
 emptyModel :: Model
 emptyModel = Model Nothing False Nothing
 
+sink0 :: ((a1 -> IO ()) -> (a2 -> IO ()) -> IO ()) -> (a1 -> b) -> (a2 -> b) -> Effect parent model b
+sink0 c ok er = withSink $ \sink -> c (sink . ok) (sink . er)
+
 updateModel :: Action -> Effect ROOT Model Action
 updateModel = \case
   SetClientIpAddr Response {..} ->
@@ -83,10 +100,10 @@ updateModel = \case
   VpnRestarted _ ->
     modify (\x -> x { restartConfirmationDialog = False })
   ConfirmVpnRestart ->
-    postJSON "/restart-vpn" () [] VpnRestarted ErrorHandler
+    sink0 doRestartVpn VpnRestarted ErrorHandler
   GetVpnBypassStatus -> do
-    getJSON "/vpn-bypass-status" [] UpdateVpnBypassStatus ErrorHandler
-    getJSON "/client-ip" [] SetClientIpAddr ErrorHandler
+    sink0 vpnBypassStatus UpdateVpnBypassStatus ErrorHandler
+    sink0 getClientIp (SetClientIpAddr . fmap ms) ErrorHandler
   UpdateVpnBypassStatus Response {..} ->
     if body then do
       info ?= VpnBypassOn
@@ -105,9 +122,9 @@ updateModel = \case
     case st ^. info of
       Nothing -> io_ (consoleError "Vpn status is not known")
       Just VpnBypassOn ->
-        postJSON' "on" () [] UpdateVpnBypassStatus ErrorHandler
+        sink0 onBypass UpdateVpnBypassStatus ErrorHandler
       Just VpnBypassOff ->
-        postJSON' "off" () [] UpdateVpnBypassStatus ErrorHandler
+        sink0 offBypass UpdateVpnBypassStatus ErrorHandler
 
   ErrorHandler Response {..} ->
     io_ (consoleError body)
