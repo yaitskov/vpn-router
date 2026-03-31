@@ -5,9 +5,7 @@ module VpnRouter.Service where
 import Network.HTTP.Media ((//), (/:))
 import Network.Socket ( SockAddr )
 import Servant
-    ( Proxy(..),
-      Tagged,
-      type (:<|>)(..),
+    ( type (:<|>)(..),
       Accept(contentType),
       JSON,
       MimeRender(..),

@@ -242,11 +242,9 @@ library
     VpnRouter.Net.Iptables
     VpnRouter.Net.IpTool
     VpnRouter.Net.Types
-    VpnRouter.Page
     VpnRouter.Prelude
     VpnRouter.Service
     VpnRouter.Th
-    VpnRouter.Yesod
   other-modules:
     Paths_vpn_router
   autogen-modules:
@@ -275,7 +273,6 @@ library
     , vpn-router-api
     , wai                     < 4
     , warp                    < 4
-    , yesod-core              < 1.8
 
 test-suite test
   import: server-base

@@ -1,7 +1,6 @@
 module VpnRouter.Net where
 
 import Network.Socket ( SockAddr(SockAddrInet) )
-import Network.Wai ( Request(remoteHost) )
 import VpnRouter.App ( NetM )
 import VpnRouter.Bash ( bash )
 import VpnRouter.Net.Types
@@ -23,7 +22,6 @@ import VpnRouter.Net.IpTool
       listDefaultsOfRoutingTable,
       addMarkToRoutingTable )
 import VpnRouter.Prelude
-import Yesod.Core ( HandlerFor, waiRequest )
 import UnliftIO.Exception ( stringException, throwIO )
 
 isVpnOff :: NetM m => (PacketMark, ClientAdr) -> m Bool
@@ -32,10 +30,6 @@ isVpnOff pmca = do
   pure (pmca `elem` (projPmCa <$> markedSources))
   where
     projPmCa (_, pm, ca) = (pm, ca)
-
-getClientAdr :: HandlerFor a ClientAdr
-getClientAdr =
-  waiRequest >>= sockAdrToClientAdr . remoteHost
 
 sockAdrToClientAdr :: NetM m => SockAddr -> m ClientAdr
 sockAdrToClientAdr = \case
