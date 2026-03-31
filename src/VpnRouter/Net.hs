@@ -35,10 +35,12 @@ isVpnOff pmca = do
 
 getClientAdr :: HandlerFor a ClientAdr
 getClientAdr =
-  waiRequest >>= \r ->
-    case remoteHost r of
-      SockAddrInet _port hip -> pure . ClientAdr $ HostIp hip
-      _ -> throwIO $ stringException "Unsupported socket addr"
+  waiRequest >>= sockAdrToClientAdr . remoteHost
+
+sockAdrToClientAdr :: NetM m => SockAddr -> m ClientAdr
+sockAdrToClientAdr = \case
+  SockAddrInet _port hip -> pure . ClientAdr $ HostIp hip
+  _ -> throwIO $ stringException "Unsupported socket addr"
 
 manualInit :: NetM m => RoutingTableId -> PacketMark -> Tagged IspNic Text -> Tagged Gateway HostIp -> m ()
 manualInit rt pm isp gw = do

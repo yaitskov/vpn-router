@@ -1,6 +1,7 @@
 module VpnRouter.Net.Types where
 
 import Conduit ( (.|), mapC, ConduitT)
+import Data.Aeson
 import Data.Conduit.Combinators (concatMap, sinkList)
 import Data.Conduit.Text ( lines )
 import Data.Text (intercalate)
@@ -16,19 +17,20 @@ data VpnService
 
 newtype LineNumber = LineNumber Int deriving newtype (Eq, Ord, Show, Read)
 
-newtype HostIp = HostIp HostAddress deriving newtype (Eq, Ord)
+newtype HostIp = HostIp HostAddress deriving newtype (Eq, Ord, FromJSON, ToJSON)
 instance Show HostIp where
   show = toString . hostIpToDec
 instance IsString HostIp where
   fromString s =
     fromMaybe (error . toText @String $ printf "Failed to parse [%s] as IPv4 address" s) $ parseIpV4 s
 
-newtype ClientAdr = ClientAdr HostIp deriving (Eq, Ord)
+newtype ClientAdr = ClientAdr HostIp
+  deriving newtype (Eq, Ord, FromJSON, ToJSON)
 
 instance Show ClientAdr where
   show = show . clientAdrToDec4
 instance FormatType 's' ClientAdr where
-  formatArg pt v ff = formatArg pt (clientAdrToDec4 v) ff
+  formatArg pt v = formatArg pt (clientAdrToDec4 v)
 
 instance ToMarkup ClientAdr where
   toMarkup = text . clientAdrToDec4
@@ -46,7 +48,7 @@ data RoutingTableId
   deriving (Show, Eq, Ord)
 
 instance FormatType 's' RoutingTableId where
-   formatArg pt v ff = formatArg pt vs ff
+   formatArg pt v = formatArg pt vs
      where
        vs :: Text
        vs = case v of

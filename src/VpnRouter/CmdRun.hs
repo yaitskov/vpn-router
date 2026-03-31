@@ -2,18 +2,20 @@
 module VpnRouter.CmdRun where
 
 import Data.Version (showVersion)
+import Network.Wai.Handler.Warp (runEnv)
 import Paths_vpn_router ( version )
 import VpnRouter.Bash ( checkAppOnPath )
-import VpnRouter.Page ( Ypp(..), cleanUpOnDemand )
+import VpnRouter.Service
+    ( AppSt(netLock, AppSt), api, service, cleanUpOnDemand )
 import VpnRouter.CmdArgs ( CmdArgs(..) )
 import VpnRouter.Net ( cleanup, manualInit, systemctl )
 import VpnRouter.Net.Iptables ( iptables )
 import VpnRouter.Net.IpTool ( ip )
 import VpnRouter.Prelude
-import Yesod.Core ( warp )
 import System.Posix.Signals
     ( installHandler, sigINT, sigUSR1, sigUSR2, sigTERM, Handler(Catch) )
 import UnliftIO.MVar ( withMVar )
+import UnliftIO.Servant.Server ( serve )
 
 foreign import ccall "exit" exit :: IO ()
 
@@ -31,7 +33,7 @@ runCmd = \case
   rs@RunService {} -> do
     $(trIo "start/rs")
     mapM_ checkAppOnPath [ip, iptables, systemctl]
-    ypp <- Ypp rs.ispNic rs.gatewayHost rs.packetMark rs.routingTableId rs.vpnService <$> newMVar () <*> newMVar ()
+    ypp <- AppSt rs.ispNic rs.gatewayHost rs.packetMark rs.routingTableId rs.vpnService <$> newMVar () <*> newMVar ()
     cleanup rs.routingTableId rs.packetMark
     onSignal $ do
       withMVar ypp.netLock $ \() -> do
@@ -43,6 +45,11 @@ runCmd = \case
     manualInit rs.routingTableId rs.packetMark rs.ispNic rs.gatewayHost
     -- lazy init becauce AmneziaVPN does not connect
     cleanup rs.routingTableId rs.packetMark
-    warp (untag rs.httpPortToListen) ypp
+    runReaderT
+      (do
+        app <- serve api service
+        liftIO $ runEnv (untag rs.httpPortToListen) app)
+      ypp
+
   VpnRouterVersion ->
     putStrLn $ "Version: " <> showVersion version

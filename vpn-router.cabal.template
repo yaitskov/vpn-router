@@ -78,6 +78,7 @@ library
     VpnRouter.Net.Types
     VpnRouter.Page
     VpnRouter.Prelude
+    VpnRouter.Service
     VpnRouter.Th
     VpnRouter.Yesod
   other-modules:
@@ -93,16 +94,21 @@ library
     , blaze-markup            < 1
     , conduit                 < 2
     , conduit-extra           < 2
+    , http-media              < 1
     , network                 < 4
     , optparse-applicative    < 1
     , regex-tdfa              < 2
+    , servant                 < 3
+    , servant-server          < 3
     , template-haskell        < 3
     , trace-embrace           < 2
     , typelits-printf         < 1
-    , unliftio                < 1
     , unix                    < 3
+    , unliftio                < 1
+    , unliftio-servant-server < 1
     , vpn-router-api
     , wai                     < 4
+    , warp                    < 4
     , yesod-core              < 1.8
 
 test-suite test
