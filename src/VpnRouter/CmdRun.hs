@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 module VpnRouter.CmdRun where
 
+import Control.Monad.Logger
 import Data.Version (showVersion)
 import Network.Wai.Handler.Warp
     ( setLogger, setPort, setServerName, runSettings, defaultSettings )
@@ -18,6 +19,7 @@ import System.Posix.Signals
     ( installHandler, sigINT, sigUSR1, sigUSR2, sigTERM, Handler(Catch) )
 import UnliftIO.MVar ( withMVar )
 import UnliftIO.Servant.Server ( serve )
+
 
 foreign import ccall "exit" exit :: IO ()
 
@@ -49,7 +51,10 @@ runCmd = \case
     cleanup rs.routingTableId rs.packetMark
     runReaderT
       (do
-        app <- serve api service
+        app <- runStdoutLoggingT $
+          filterLogger
+            isAtLeastInfo
+            (serve api service)
         liftIO $ do
           withStdoutLogger $ \aploger -> do
             runSettings
@@ -61,3 +66,7 @@ runCmd = \case
 
   VpnRouterVersion ->
     putStrLn $ "Version: " <> showVersion version
+
+
+isAtLeastInfo :: p -> LogLevel -> Bool
+isAtLeastInfo _ ll = ll >= LevelInfo

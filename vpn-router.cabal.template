@@ -93,6 +93,7 @@ library
     , conduit                 < 2
     , conduit-extra           < 2
     , http-media              < 1
+    , monad-logger            < 1
     , network                 < 4
     , optparse-applicative    < 1
     , regex-tdfa              < 2

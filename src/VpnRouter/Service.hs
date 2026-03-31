@@ -1,7 +1,9 @@
+{-# OPTIONS_GHC -freduction-depth=0 #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE TemplateHaskell #-}
 module VpnRouter.Service where
 
+import Control.Monad.Logger ( logInfo, LoggingT )
 import Network.HTTP.Media ((//), (/:))
 import Network.Socket ( SockAddr )
 import Servant
@@ -68,11 +70,11 @@ instance Accept Wasm where
 instance MimeRender Wasm ByteString where
   mimeRender _ = toLazy
 
-type AppM = ReaderT AppSt IO
+type AppM = LoggingT (ReaderT AppSt IO)
 
 type VpnRouterApi
   = VpnBypassStatusApi :<|> ClientIpApi :<|> OffApi :<|> OnApi
-    :<|> "restart-vpn" :> Post '[JSON] ()
+    :<|> "restart-vpn" :> RemoteHost :> Post '[JSON] ()
     :<|> "github.svg" :> Get '[Svg] ByteString
     :<|> "open.svg" :> Get '[Svg] ByteString
     :<|> "closed.svg" :> Get '[Svg] ByteString
@@ -125,7 +127,7 @@ offBypass :: SockAddr -> AppM Bool
 offBypass sa = do
   ap <- ask
   ca <- sockAdrToClientAdr sa
-  -- $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
+  $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
   withNet ap $ turnOffVpnFor ca ap.packetMark
   vpnBypassStatus sa
 
@@ -134,15 +136,15 @@ onBypass :: SockAddr -> AppM Bool
 onBypass sa = do
   ap <- ask
   ca <- sockAdrToClientAdr sa
-  -- $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
+  $(logInfo) $ printf "Client %s asked to enable VPN just for him" ca
   withNet ap $ turnOnVpnFor ca ap.packetMark
   vpnBypassStatus sa
 
-doRestartVpn :: AppM ()
-doRestartVpn = do
+doRestartVpn :: SockAddr -> AppM ()
+doRestartVpn sa = do
   ap <- ask
-  -- ca <- sockAdrToClientAdr sa
-  -- $(logInfo) $ printf "Client %s asked to restart VPN service" ca
+  ca <- sockAdrToClientAdr sa
+  $(logInfo) $ printf "Client %s asked to restart VPN service" ca
   withMVar ap.netLock $ \() -> do
     -- restart lose all bypass
     cleanUpOnDemand ap
