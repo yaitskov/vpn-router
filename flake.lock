@@ -194,16 +194,15 @@
     "miso": {
       "flake": false,
       "locked": {
-        "lastModified": 1775017042,
-        "narHash": "sha256-8iwt24KgXUZLt+hV1X16PficxUplYbLgqnx52oCbTPw=",
-        "owner": "yaitskov",
+        "lastModified": 1775020114,
+        "narHash": "sha256-h9nz+6lI6p4GFb+o8O4B8Q0BY2BskZXcZyQrVzuyM7I=",
+        "owner": "dmjio",
         "repo": "miso",
-        "rev": "7e96cb743434d56f08845a1534189c925041df75",
+        "rev": "04598c264e0f80dd56d3c85d0e090c0b7d822f2b",
         "type": "github"
       },
       "original": {
-        "owner": "yaitskov",
-        "ref": "from-json-text",
+        "owner": "dmjio",
         "repo": "miso",
         "type": "github"
       }

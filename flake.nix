@@ -14,8 +14,7 @@
       "gitlab:haskell-wasm/ghc-wasm-meta?host=gitlab.haskell.org";
     miso = {
       url = # path:/home/dan/study/haskell/miso/miso;
-        # "github:dmjio/miso";
-        "github:yaitskov/miso/from-json-text";
+        "github:dmjio/miso";
       flake = false;
     };
     smc = {
