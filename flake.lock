@@ -194,11 +194,11 @@
     "miso": {
       "flake": false,
       "locked": {
-        "lastModified": 1774980693,
-        "narHash": "sha256-QN/c+qpXUV1QAXgEXqaE6w9tS0PSfvel4MzxPGSAvMc=",
+        "lastModified": 1775017042,
+        "narHash": "sha256-8iwt24KgXUZLt+hV1X16PficxUplYbLgqnx52oCbTPw=",
         "owner": "yaitskov",
         "repo": "miso",
-        "rev": "bec23194de61a8320e88e42edaf12d6e5dfa327b",
+        "rev": "7e96cb743434d56f08845a1534189c925041df75",
         "type": "github"
       },
       "original": {
